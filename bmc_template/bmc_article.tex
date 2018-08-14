@@ -278,11 +278,14 @@ the traversability of the tunnels is determined based only on the radial bottlen
 This can lead to imprecise results as the shape of the ligand is not considered.
 
 \parttitle{Results} %if any
-To address this problem, we define the computation of the transportation path of non-spherical ligands including their conformation changes (i.e., when the atoms of the ligand move relatively to each other) as a motion planning task in the high-dimensional configuration space.
-We propose a modification of the Rapidly Exploring Random Tree planner for trajectory computation of flexible ligands.
-To cope with the narrow passage problem, the random samples are generated around a tunnel detected by a Voronoi-based approach.
-%which serves us for better localization of the searched space.
-The flexibility of the ligand is modeled using a fixed set of known conformations. 
+We propose a method to compute trajectories of ligands along selected tunnels in the proteins.
+The trajectories are computed using a novel motion planner based on Rapidly Exploring Random Tress, that searches
+the corresponding configuration space.
+The flexibility of the ligand is modeled by alowing rotations of the dihedral angles.
+The search of the trajectories is guided using the information of the spherial tunnels.
+By constraining the search to the vicinity of the tunnels, trajectories can be found significnatly faster than with other related tools.
+The resulted trajectories are evaluted using an energy  profile, which enables chemists to revelan new information about the tunnels and
+help to decide if the analyzed tunnels are accessible for the ligands being tested.
 
 \parttitle{Conclusions} %if any
 The proposed method has been evaluated in a virtual screening scenario to estimate the traversability of tunnels for several ligands.
@@ -342,6 +345,9 @@ The proposed method has been evaluated in a virtual screening scenario to estima
 %% Background %%
 %%
 \section*{Background}
+
+{\color{red}TODO add ref \cite{zhou2010gates}}
+
 The reactivity of proteins with other molecules plays a crucial role in many research disciplines, including protein engineering and drug design.
 Protein reactivity is tightly connected with the presence of the void space between its amino acids. 
 This space, forming a path called a tunnel, can be utilized by a small molecule (ligand) which can enter the protein inner space and react with the amino acids surrounding the protein active site~\cite{gora2013gates,marques2017enzyme} (see Fig.~\ref{fig::motiv}).
@@ -391,7 +397,7 @@ In this paper, we propose a modification of the RRT planner to find trajectories
 A tunnel is represented by a set of consecutive spheres surrounding the tunnel centerline.
 Random samples are generated only around a given tunnel instead of the whole configuration space.
 To enable the movement of the ligand in the narrow parts of the tunnel, the free-space is dilated by shrinking the atom radii, similarly, e.g., to~\cite{hsu06multilevel}.  %cortes2005path removed as it is not clear it they really rescale
-The ligand flexibility is modeled using a fixed set of predefined conformations which can be taken by the ligand.
+The flexibility of the ligand is achieved by changing all or selected the dihedral angles.
 
 Finding trajectories only along a given tunnel is faster than computing all possible exit paths, due to the decreased volume of the searched configuration space.
 Another advantage of our method, in comparison with the existing approaches, is that we enable the users to trace the ligand path leading from the
@@ -402,6 +408,9 @@ In the following section, we first mention several approaches and methods relate
 
 
 \subsection*{Related Work}
+
+{\color{red}BARA: vymezit se vuci Chexvis \cite{masood2015chexvis}}
+
 Transportation of ligands into the protein active site can be directly evaluated using molecular dynamics (MD) simulations, where both the protein and ligand are flexible.
 However, MD simulations are considerably computational demanding~\cite{kingsley2014including} and they have to be prepared
 for a particular ligand/protein pair, which is not practical for testing a large number of different ligands interacting with the protein.
@@ -458,11 +467,18 @@ The high-energy configurations are discarded, while the low-energy configuration
 The approach~\cite{singhLIG} can also predict the ligand binding sites.
 
 
-\section*{Methods}
-We propose a modification of RRT to compute trajectories for non-spherical flexible ligands through protein tunnels.
-The input of the proposed method is a set of tunnels computed using Voronoi diagrams, and the task is to find trajectories for a ligand along these tunnels leading from the protein surface to the inner buried active site.
-The tunnels are detected on selected protein conformations, resulting, e.g., from MD simulations or from a tool providing the protein conformation sampling
-~\cite{lei2004sampling,wells2005constrained,seeliger2007geometry}.
+
+
+
+\subsection*{Contributions}
+{\color{red}Rewritten, please check }
+
+We propose a utilization of sampling-based motion planning to compute trajectories of flexible ligands though/along protein tunnels.
+The input of the proposed method is a set of tunnels computed using Voronoi diagrams.
+The method computed feasible trajectories for a given ligand along the given tunnels. 
+The trajectories can be computed both from the surface of the protein to the active sice or vice versa.
+
+%The tunnels are detected on selected protein conformations, resulting, e.g., from MD simulations or from a tool providing the protein conformation sampling~\cite{lei2004sampling,wells2005constrained,seeliger2007geometry}.
 
 In contrast to~\cite{cortes2010simulating}, which searches for any exit pathway from the protein, we localize the searching and compute the trajectories only along each tunnel separately, which allows the biochemists to analyze selected tunnels.
 Computing the trajectories along a single tunnel brings several advantages from the motion planning point of view as well.
@@ -479,65 +495,100 @@ In consequence, even very narrow tunnels, being too small for the passage of a g
 Therefore, also the existing Voronoi-based methods enable the user to decrease the size of the approximating sphere which simulates the shrinking of the ligand size.
 In our solution, we simulate this by shrinking the atom radii of the ligand, which is used also by~\cite{cortes2010simulating,guieysse2008structure}.
 
-MD simulations of ligands passing through proteins show that the ligands can be highly flexible.
-All possible conformations of a ligand are determined by the torsion and dihedral angles between its atoms, but the low-energy conformations are preferred.
-Therefore, the ligand flexibility can be modeled using only a predefined set of low-energy conformations.
-By using the set of predefined conformations, it is not necessary to model the additional degrees of freedom, so 
-the dimension of the configuration space is not increased as in~\cite{cortes2010simulating}.
+%MD simulations of ligands passing through proteins show that the ligands can be highly flexible.
+%All possible conformations of a ligand are determined by the torsion and dihedral angles between its atoms, but the low-energy conformations are preferred.
+%Therefore, the ligand flexibility can be modeled using only a predefined set of low-energy conformations.
+%By using the set of predefined conformations, it is not necessary to model the additional degrees of freedom, so 
+%the dimension of the configuration space is not increased as in~\cite{cortes2010simulating}.
+%
 
 
-\subsection*{Traversability of Tunnels}
-\subsubsection*{Preliminaries}
-Proteins and ligands are represented by the hard sphere model, where the radius of each sphere representing an atom is given by its van der Waals radius.
-Protein tunnel is described by a sequence of collision-free spheres $T=( (c_1, r_1),\ldots,(c_n,r_n) )$, where $n$ denotes the number of spheres, $c_i \in$ $\mathbb{R}^3$ their 3D position, and $r_i > 0$ the maximum collision-free radius of a sphere centered at $c_i$. 
-Tunnels serving as an input for the proposed method can be detected using some of the existing computational tools, such as CAVER 3.0~\cite{caver3}.
-The ligand is modeled using the set $\L$ of its conformations.
-The conformations are prepared by discrete sampling of degrees of freedom of the ligand. % (e.g., using the Rosetta3 tool).
-Each candidate conformation is ranked according to its energy and only low-energy conformations are used in $\L$.
 
-To enable the motion of ligands in the narrow tunnels, the atomic radii of the ligand are scaled down by a factor $s, 0 < s \le 1$.
-In our solution, we use the discrete set of scales, i.e., $s \in \S=\{\smin, \smin+\sdelta, \ldots, \smax\}$, where 
-$\smin$ is the minimal allowed scale, $\smax=1$ is the maximal allowed scale, and $\sdelta$ is the minimal difference between two scales.
+\section*{Methods}
 
-A configuration of the ligand $q=(x,y,z,r_x,r_y,r_z,l,s)$ is described
-by the 3D position $(x,y,z)$ of the reference point of the ligand (e.g., the geometric center or a selected atom), rotation around $x$, $y$, and $z$ axes,
-index of the conformation $l\in \L$, and scale $s \in \S$.
-All possible configurations form the configuration space $\C$ and the collision-free configurations
-form the subspace $\CF \subseteq \C$.
-A configuration $q$ is collision-free if none of the ligand atoms scaled by $s$ and placed at the
-position defined by $q$ collides with protein atoms.
-We assume that the ligand can change from conformation $l_1$ in configuration $q_1$ to conformation $l_2$ in configuration $q_2$
-if both $q_1$ and $q_2$ are collision-free and if the distance from $q_1$ to $q_2$ is smaller than the resolution $\varepsilon$ of the planner ($\varepsilon=0.05$~\AA).
+\subsection*{Preliminaries}
 
-\subsubsection*{Computing Initial Configurations}
-Depending on the chemical interactions between the ligand and the protein surface, the ligand may enter the tunnel in various rotations and spatial conformations.
-Therefore, the traversability of the tunnel should be evaluated using multiple starting configurations $\QI$.
-The initial configurations are searched around the beginning of the tunnel.
-A random sample $q$ is generated around the first sphere of the tunnel 
-$c_1$ in the distance $\RI$ (the translation and rotation parts of $q$ are generated randomly, the scale is set to $\smin$, and the conformation index is set randomly).
-If the sample $q$ is collision-free, it is added to $\QI$ as new starting configuration.
-The distance $\RI$ influences how far the initial configurations are from the start of the tunnel.
-By placing them too far, the planner would need more iterations to enter the tunnel, which would increase the runtime.
-Contrary, too low $\RI$ may prevent the algorithm to find any collision-free configurations, especially for large ligands.
-We suggest to set $\RI$ to the radius of the first sphere in the tunnel and increase it only if no collision-free configuration
-can be found around.
-For each starting configuration $\qinit \in \QI$, the trajectories are computed using a modified RRT, which is introduced in the following section.
+\cite{pdbqt}
 
-\subsubsection*{RRT for Computing Ligand's Trajectory along Tunnel}
-The proposed algorithm is based on the principle of the RRT~\cite{lavalleRRT} planner.
-In each iteration, a random sample $\qrand$ is generated and its nearest node $\qnear\in\T$ in the tree is found.
-The nearest-neighbor search between $\qrand$ and the tree is performed using the weighted 6D Euclidean metric computed using
-both 3D rotation and 3D translation.
-The main loop of the planner (Alg.~\ref{alg::main}) is similar to the original RRT, but with the following two proposed modifications.
+Proteins and ligands are represented by the hard sphere model, where each atom is represented by a sphere and whose radius 
+is the van der Waals radius.
+The flexibility of the ligand is modeled as an articulated kinematic chain with $m$ joints.
+The joints are determined by the rotatable bonds of the ligand.
+The kinematic chain of the ligand is described using a PDBQT~\cite{pdbqt} data format.
 
-The aim of the first modification is to sample the configuration space along the tunnel being analyzed.
-To guide the growth of the tree using the tunnel, a moving virtual goal is used. %~\cite{vonasek2009rrt}.
-The virtual goal $v, 1\le v \le n$, is the index of a sphere of the tunnel.
-At the beginning of the algorithm, $v=1$.
-The random samples $\qrand$ are generated around the sphere $c_v \in T$ with the probability $\gb$, and from the whole $\C$ otherwise.
-After the tree reaches the sphere $c_v$, i.e., the distance of the tree to $c_v$ is
-less than a predefined threshold $\dt$, the virtual goal is moved to the successor of the last sphere in the tunnel
-that is reached by the tree (lines~\ref{alg::main:a}--\ref{alg::main:b} in Alg.~\ref{alg::main}).
+A configuration $q=(x,y,z,r_x,r_y,r_z, \alpha_1,\ldots,\alpha_m)$ of the ligand is describes its 3D position $(x,y,z)$, 3D rotation $(r_x,r_y,r_z)$ and $n$ internal degrees of freedom $\alpha_i$ modeling  the rotatable bonds.
+All possible configurations form the configuration space $\C$ and the collision-free configurations form the subset $\CF\subseteq\C$.
+A configuration $q$ is collision-free if there is no collision between the spheres of the ligand (places at position defined by $q$) and
+spheres of the protein.
+The distance $\varrho(q_a,q_b)$ between two configurations is measured as 6D Euclidean distance computed using 
+the translation and rotation part of the configurations $q_a$ and $q_b$.
+
+
+A protein tunnel is described by a sequence of collision-free spheres $T=( (c_1, r_1),\ldots,(c_n,r_n) )$, where $n$ denotes the number of spheres, $c_i \in$ $\mathbb{R}^3$ their 3D position, and $r_i > 0$ the maximum collision-free radius of a sphere centered at $c_i$. 
+Tunnels serving as an input for the proposed method can be detected using some of the existing computational tools (e.g., CAVER 3.0~\cite{caver3}, or CHEXVIS~\cite{masood2015chexvis}).
+
+
+
+%To enable the motion of ligands in the narrow tunnels, the atomic radii of the ligand are scaled down by a factor $s, 0 < s \le 1$.
+%In our solution, we use the discrete set of scales, i.e., $s \in \S=\{\smin, \smin+\sdelta, \ldots, \smax\}$, where 
+%$\smin$ is the minimal allowed scale, $\smax=1$ is the maximal allowed scale, and $\sdelta$ is the minimal difference between two scales.
+%\subsection*{Computing Initial Configurations}
+
+Trajectory computation, that is described in the next section, needs  to start from a feasible configuration $\qinit \in \CF$.
+This configuration is found by randomly sampling the configuration space around the begining of the tunnel, i.e.,
+the translation part is set around user-defined vicinity of the first sphere of the tunnel and the rotation part is
+set randomly.
+The first configuration to be collision-free is considered as $\qinit$.
+
+%Depending on the chemical interactions between the ligand and the protein surface, the ligand may enter the tunnel in various rotations and spatial conformations.
+%Therefore, the traversability of the tunnel should be evaluated using multiple starting configurations $\QI$.
+%The initial configurations are searched around the beginning of the tunnel.
+%A random sample $q$ is generated around the first sphere of the tunnel 
+%$c_1$ in the distance $\RI$ (the translation and rotation parts of $q$ are generated randomly, the scale is set to $\smin$, and the conformation index is set randomly).
+%If the sample $q$ is collision-free, it is added to $\QI$ as new starting configuration.
+%The distance $\RI$ influences how far the initial configurations are from the start of the tunnel.
+%By placing them too far, the planner would need more iterations to enter the tunnel, which would increase the runtime.
+%Contrary, too low $\RI$ may prevent the algorithm to find any collision-free configurations, especially for large ligands.
+%We suggest to set $\RI$ to the radius of the first sphere in the tunnel and increase it only if no collision-free configuration
+%can be found around.
+%For each starting configuration $\qinit \in \QI$, the trajectories are computed using a modified RRT, which is introduced in the following section.
+
+\subsection*{Computing Ligand's trajectories using Sampling-based Planning}
+%RRT for Computing Ligand's Trajectory along Tunnel
+
+Finding the feasible trajetories from $\qinit$ along the tunnel is solved by searching the configuration space $\C$.
+The proposed planner is based on the RRT principle~\cite{lavalleRRT}. 
+It construct a tree $\T$ of collision-free configurations rooted at $\qinit$.
+The main loop of the proposed method is listed in Alg.~\ref{alg::main}.
+The main difference between the basic RRT and the proposed method is the utilization of a moving virtual goal $v$ that
+defines regions from drawing the random samples around the tunnels.
+The virtual goal $0 \le v \le n$ is a index of sphere of the provided tunnel $T$.
+At the begining, the virtual goal is set to the first sphere of the tunnel, i.e., $v=1$, 
+ and it is moved forwards (towards the end of the tunnel) if the tree
+approaches the tunnel sphere $c_v$ close enough.
+
+In each step, a random configuration $\qrand$ is sampled either along the tunnel with probability $\gb$ 
+or from the whole configuration space ((lines~\ref{main::s1}--\ref{main::s2} in~Alg.~\ref{alg::main}).
+Then, the nearest node in the tree $\qnear \in \T$ is found and expanded.
+During the expansion (Alg.~\ref{alg::expand}), the vicinity of $\qnear$ is sampled with $N$ predefined
+samples.
+The samples are tested for collisions and the collision-free samples, that minimize the distance to $\qrand$ are added to the tree.
+
+
+%The aim of the first modification is to sample the configuration space along the tunnel being analyzed.
+%To guide the growth of the tree using the tunnel, a moving virtual goal is used. %~\cite{vonasek2009rrt}.
+%The virtual goal $v, 1\le v \le n$, is the index of a sphere of the tunnel.
+%At the beginning of the algorithm, $v=1$.
+%The random samples $\qrand$ are generated around the sphere $c_v \in T$ with the probability $\gb$, and from the whole $\C$ otherwise.
+
+After the tree is expanded, the progress of the tree with respect to the provided tunnel is evaluated.
+A sphere $i$ of the tunnel is considered as reached by the tree, if the distance from the nearest node of the tree
+towards $c_i$ is less than a predefined threshold $\dt$.
+The virtual goal is moved to the success of the last sphere of the tunnel, that is reached by the tree
+(lines~\ref{alg::main:a}--\ref{alg::main:b} in Alg.~\ref{alg::main}).
+%After the tree reaches the sphere $c_v$, i.e., the distance of the tree to $c_v$ is
+%less than a predefined threshold $\dt$, the virtual goal is moved to the successor of the last sphere in the tunnel
+%that is reached by the tree (lines~\ref{alg::main:a}--\ref{alg::main:b} in Alg.~\ref{alg::main}).
 Setting the virtual goal to this successor allows the tree to avoid such parts of the tunnels that are not traversable or reachable by the ligand.
 The tree can slightly detour from the tunnel and overcome difficult parts (e.g., the tunnel bottleneck) by finding an alternative trajectory nearby.
 The parameter $\dt$ determines how far can the tree detour from the tunnel centerline.
@@ -568,9 +619,9 @@ $iteration = 0$\;
 $\T$.addNode($\qinit$)\;
 \While{$iteration < \Imax$ {\bf and}  $v < n$}{
     \eIf{$rand() < \gb$}{
-        $\qrand$ = random sample around virtual goal $c_v\!\in\!T$\;
+        $\qrand$ = random sample around virtual goal $c_v\!\in\!T$; \nllabel{main::s1} \\
     }{
-        $\qrand$ = random sample from $\C$\;
+        $\qrand$ = random sample from $\C$; \nllabel{main::s2} \\
     }
     $\qnear$ = nearest node in $\T$ towards $\qrand$\;
     expand($\T, \qnear,\qrand$)\;
@@ -616,19 +667,19 @@ smaller scales are used only in difficult (narrow) regions.
    random configuration $\qrand$
 }
 \KwData{
-   ligand conformations $\L$,
-   scale limits $\smin, \smax$, and $\sdelta$,
+   ligand conformations $\L$, number of local trials $m$
+ %  scale limits $\smin, \smax$, and $\sdelta$,
 }
 \hrule
-\ForEach{$l \in \L$}{
-    \ForEach{$s \in (\smax,\smax-\sdelta, \ldots, \smin+\sdelta, \smin)$}{
+%\ForEach{$l \in \L$}{
+%    \ForEach{$s \in (\smax,\smax-\sdelta, \ldots, \smin+\sdelta, \smin)$}{
         $\qnew = \emptyset$; // empty configuration \nllabel{alg::expa} \\
         \For{$i = 1,\ldots,m$}{
             $q=\qnear$\;
             $q.position$ = random 3D position around $\qnear$\;
             $q.rotation$ = random 3D rotation\;
-            $q.l = l$\; 
-            $q.s = s$\;
+%            $q.l = l$\; 
+%            $q.s = s$\;
             \If{isCollisionFree($q$)}{
                 \If{$\qnew = \emptyset$ {\bf or} $\dist(q, \qrand) < \dist(\qnew,\qrand)$}{ \nllabel{alg::expand:a}
                     $\qnew = q$\;
@@ -641,8 +692,8 @@ smaller scales are used only in difficult (narrow) regions.
             $\T$.addEdge($\qnear,\qnew$)\;
             {\bf break;} // go to the next conformation
         }
-    }
-}
+%    }
+%}
 }
 \end{algorithm}
 
@@ -651,22 +702,25 @@ between $\qinit$ (root of the tree) and $q'$ is found, where
  $q'$ is the nearest node to the end of the tunnel (measured using the 3D Euclidean metric). 
 
 
-\subsubsection*{Selection of Conformations for Motion Planning}
-\label{sec::strat}
+%\subsubsection*{Selection of Conformations for Motion Planning}
+%\label{sec::strat}
+%
+%Each conformation from $\L$ is tested during the tree expansion. %in order to approach $\qrand$.
+%By using more conformations, there is a higher chance that at least one of them can expand the tree towards the random sample $\qrand$.
+%Using a large number of conformations also increases the time complexity of the expansion step.
+%The pool of available conformations $\L$ consists of all conformations (up to some resolution) with the energy lower than a user-specified threshold, which can still contain too many conformations (thousands or even more).
+%
+%In the case of large sets $\L$, only a subset of the available ligand conformations can be used in the planning.
+%To select the subset, the conformations are ranked using the spread of the atoms around the geometric center of the ligand.
+%The distance of centers of ligand atoms to the geometric center of the ligand is computed, and the deviation of these
+%distances then characterizes the spread.
+%Low deviation is characteristic for `packed' conformations, while larger deviations correspond to the elongated conformations (Tab.~\ref{tab::m040c}).
+%To select the subset of $n$ representative conformations from all $|\L|$ available conformations, they are sorted according to the deviation.
+%Each $k-$th conformation from the sorted list, where $k=\lfloor{|\L| / n}\rfloor$, is used.
+%The selected conformations are then used in the planning process.
 
-Each conformation from $\L$ is tested during the tree expansion. %in order to approach $\qrand$.
-By using more conformations, there is a higher chance that at least one of them can expand the tree towards the random sample $\qrand$.
-Using a large number of conformations also increases the time complexity of the expansion step.
-The pool of available conformations $\L$ consists of all conformations (up to some resolution) with the energy lower than a user-specified threshold, which can still contain too many conformations (thousands or even more).
 
-In the case of large sets $\L$, only a subset of the available ligand conformations can be used in the planning.
-To select the subset, the conformations are ranked using the spread of the atoms around the geometric center of the ligand.
-The distance of centers of ligand atoms to the geometric center of the ligand is computed, and the deviation of these
-distances then characterizes the spread.
-Low deviation is characteristic for `packed' conformations, while larger deviations correspond to the elongated conformations (Tab.~\ref{tab::m040c}).
-To select the subset of $n$ representative conformations from all $|\L|$ available conformations, they are sorted according to the deviation.
-Each $k-$th conformation from the sorted list, where $k=\lfloor{|\L| / n}\rfloor$, is used.
-The selected conformations are then used in the planning process.
+
 
 
 \section*{Results and Discussion}
@@ -687,20 +741,19 @@ In most of the frames, two tunnels were detected.
 The average bottleneck sizes of these tunnels were $1.48$~\AA\ and $1.2$~\AA\ for the main and side tunnel, respectively.
 
 Models  of the ligands in Mol2 formats were converted to the param files~\cite{meiler2006rosettaligand}, containing the topology, rotatable bonds, atom types, and partial charges. 
-The pool of conformations $\L$ was created by the rotation of all rotatable bonds with 30$^\circ$ step using Rosetta3.
-The energy cut-off for individual conformations was set to 0.075. %(-rot_ensemble_ecutoff 0.075) 
+%The pool of conformations $\L$ was created by the rotation of all rotatable bonds with 30$^\circ$ step using Rosetta3.
+%The energy cut-off for individual conformations was set to 0.075. %(-rot_ensemble_ecutoff 0.075) 
+%Four different scaling-down factors were used: $\S=\{0.5,0.6,0.7,0.8\}$.
+%For each scale, $|\QI|=20$ collision-free initial configurations were found in the $\RI=2$~\AA\ radius around the first sphere of the tunnel (outside the protein).
+%For each initial configuration, 10 trajectories were computed, which resulted
+%in $100 \times 4 \times 20 \times 10 = 80,000$ trajectories per ligand.
 
-Four different scaling-down factors were used: $\S=\{0.5,0.6,0.7,0.8\}$.
-For each scale, $|\QI|=20$ collision-free initial configurations were found in the $\RI=2$~\AA\ radius around the first sphere of the tunnel (outside the protein).
-For each initial configuration, 10 trajectories were computed, which resulted
-in $100 \times 4 \times 20 \times 10 = 80,000$ trajectories per ligand.
-
-Two motion planners were compared: the proposed planner (described in Alg.~\ref{alg::main} and Alg.~\ref{alg::expand}), denoted as \RA\ in the rest of the paper, and the Retraction-based RRT~\cite{zhangRetraction}, denoted as \RB\ in the rest of the paper.
-The \RA\ method was launched with the following parameters:
-$\Imax=5000$, $m=100$, $\gb=0.9$, $\dt=1.5$~\AA, $\rv=2$~\AA\ and $\varepsilon=0.05$~\AA.
-Both methods utilize the same data structures and low-level routines (e.g., collision-detection) to enable a fair comparison.
-The nearest-neighbor search of both planners was based on the 6D Euclidean metric with the same weights for rotation and translation parts.
-This metric was selected based on preliminary experiments with both planners, as it resulted in the highest success rates.
+%Two motion planners were compared: the proposed planner (described in Alg.~\ref{alg::main} and Alg.~\ref{alg::expand}), denoted as \RA\ in the rest of the paper, and the Retraction-based RRT~\cite{zhangRetraction}, denoted as \RB\ in the rest of the paper.
+%The \RA\ method was launched with the following parameters:
+%$\Imax=5000$, $m=100$, $\gb=0.9$, $\dt=1.5$~\AA, $\rv=2$~\AA\ and $\varepsilon=0.05$~\AA.
+%Both methods utilize the same data structures and low-level routines (e.g., collision-detection) to enable a fair comparison.
+%The nearest-neighbor search of both planners was based on the 6D Euclidean metric with the same weights for rotation and translation parts.
+%This metric was selected based on preliminary experiments with both planners, as it resulted in the highest success rates.
 
 The methods \RA\ and \RB\ differ in the expansion step (lines \ref{alg::expa}--\ref{alg::expb} in Alg.~\ref{alg::expand}).
 In these lines, the \RB\ method employs the retraction step in order to find a new collision-free configuration $\qnew$ that approaches $\qrand$.
@@ -720,42 +773,46 @@ A frame is considered traversable if at least one trajectory out of 200 ($\!|\QI
 This distance is measured as the 3D distance between the geometric center of the ligand and the position of the active site.
 
 
-\paragraph*{Influence of the Conformation Selection}
-The number of generated ligand conformations $|\L|$ depends on the number of rotatable bonds of the ligands and even though only
-the low-energy conformations are stored in $\L$, the set can still contain thousands of conformations.
-For fast motion planning we utilize a subset of the original set $\L$.
-The aim of this experiment was to verify the proposed selection of ligand conformations from a large set $\L$ (Sec.~\ref{sec::strat}).
+%\paragraph*{Influence of the Conformation Selection}
+%The number of generated ligand conformations $|\L|$ depends on the number of rotatable bonds of the ligands and even though only
+%the low-energy conformations are stored in $\L$, the set can still contain thousands of conformations.
+%For fast motion planning we utilize a subset of the original set $\L$.
+%The aim of this experiment was to verify the proposed selection of ligand conformations from a large set $\L$ (Sec.~\ref{sec::strat}).
+%
+%Two selection strategies were tested:
+%the strategy described in Sec.~\ref{sec::strat} (denoted `S') and the strategy that prefers smaller (packed) conformations (denoted `P').
+%The `P' method selects such conformations where the deviations of the atomic distance from the geometric center are the lowest, which leads 
+%to the selection of packed conformations.
+%The strategies were tested using the ligand DCP (Dichloropropanol), for which  $|\L|=1300$ conformations were created, and for the ligand
+%m040 (1,5-Dichloropentane) with $|\L|=7560$ conformations.
+%
+%The traversability rates are shown in Tab.~\ref{tab::selection}, where the subscript of each ligand's 
+%name shows the number of the selected conformations (5 or 50) and the used method (S or P).
+%In case of both tested ligands and 50 selected conformations, the `S' strategy leads to a higher traversability rate than the `P' strategy.
+%For the DCP ligand, the higher traversability rate was achieved when 50 conformations were selected.
+%This experiment shows that selecting 50 conformations using the `S' strategy (Sec.~\ref{sec::strat}) leads to better results
+%than using the smaller number of conformations or when preferring the packed conformations.
+%
+%\begin{table}[bt]
+%\centering
+%\caption{\label{tab::selection}
+%    \small
+%    The influence of the conformation selection method on the traversability rates in the first (main) tunnel of the 4E46 protein.
+%    The number after~`$/$' denotes the number of atoms.
+%}
+%\small
+%\renewcommand{\tabcolsep}{4.3pt}
+%{\scriptsize
+%\input graphSelNew.tex
+%}
+%\end{table}
 
-Two selection strategies were tested:
-the strategy described in Sec.~\ref{sec::strat} (denoted `S') and the strategy that prefers smaller (packed) conformations (denoted `P').
-The `P' method selects such conformations where the deviations of the atomic distance from the geometric center are the lowest, which leads 
-to the selection of packed conformations.
-The strategies were tested using the ligand DCP (Dichloropropanol), for which  $|\L|=1300$ conformations were created, and for the ligand
-m040 (1,5-Dichloropentane) with $|\L|=7560$ conformations.
 
-The traversability rates are shown in Tab.~\ref{tab::selection}, where the subscript of each ligand's 
-name shows the number of the selected conformations (5 or 50) and the used method (S or P).
-In case of both tested ligands and 50 selected conformations, the `S' strategy leads to a higher traversability rate than the `P' strategy.
-For the DCP ligand, the higher traversability rate was achieved when 50 conformations were selected.
-This experiment shows that selecting 50 conformations using the `S' strategy (Sec.~\ref{sec::strat}) leads to better results
-than using the smaller number of conformations or when preferring the packed conformations.
-
-\begin{table}[bt]
-\centering
-\caption{\label{tab::selection}
-    \small
-    The influence of the conformation selection method on the traversability rates in the first (main) tunnel of the 4E46 protein.
-    The number after~`$/$' denotes the number of atoms.
-}
-\small
-\renewcommand{\tabcolsep}{4.3pt}
-{\scriptsize
-\input graphSelNew.tex
-}
-\end{table}
 
 \paragraph*{Traversability of Ligands}
-Based on the results of the previous experiment, 50 conformations using the `S' strategy (Sec.~\ref{sec::strat})  were selected for ligands 
+Based on the results of the previous experiment, 
+      %50 conformations using the `S' strategy (Sec.~\ref{sec::strat})  were selected for 
+      ligands 
 m037t (1,2-Dichloroethane), m038t (1,3-Dichloropropane), m056 (2-Chlorobutane), and m080 (Trichloropropane).
 
 \begin{table}[bt]
