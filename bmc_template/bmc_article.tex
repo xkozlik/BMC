@@ -106,12 +106,11 @@
 \def\C{\mathcal{C}}
 \def\CF{\mathcal{C}_{free}}
 \def\dtg{d_{t}}
-%\def\da{d_{atom}}
 \def\dist{\varrho}
 \def\distt{\varrho_{3D}}
 \def\R{\mathbb{R}}
 
-\def\rv{R_{tunnel}}
+%\def\rv{R_{tunnel}}
 
 
 \def\Imax{I_{max}} %max number of iterations of RRT-based planners
@@ -515,7 +514,7 @@ All configurations form the configuration space $\C$.
 The configurations, where the ligand does not collide with the protein, form the subset $\CF \subseteq \C$.
 Therefore, the task of finding the trajectory of the ligand can be solved by finding a path from the
 start configuration $\qstart \in \CF$ towards the goal $\qgoal \in \CF$.
-The distance $\dist(q_a,q_b)$ between two conifguration $q_a$ and $q_b$ is measured by the 6D Euclidean metric using
+The distance $\dist(q_a,q_b)$ between two configuration $q_a$ and $q_b$ is measured by the 6D Euclidean metric using
 both translation and rotation part of the two configurations.
 Let $\distt(c,q)$, $c \in \R^3, q \in \C$ denote 3D Euclidean distance between the 3D point $c$ and
 the translational part of the configuration $q$.
@@ -580,6 +579,9 @@ In case of tunnels not having other tunnels in the close vicinity (which is very
 The algorithm terminates after a predefined number of planning trials $\Imax$ or if the tree reaches
 the last sphere in the tunnel, i.e., when $v = n$.
 
+and the rotational part of $\qrand$ is generated using techniques described in~\cite{kuffnerES}.
+
+
 \linesnumbered
 \begin{algorithm}[b]
 {\small
@@ -625,12 +627,6 @@ $\T$.addNode($\qinit$)\;
 }
 \end{algorithm}
 
-To generate the samples $\qrand$ around the virtual goal $v$, the translation part $(x,y,z)$ of $\qrand$ is generated
-from the Gaussian distribution $N(c_v,\Sigma)$, where $\Sigma$ is the diagonal matrix with diagonal entries equal to the parameter $\rv$, 
-and the rotational part of $\qrand$ is generated using techniques described in~\cite{kuffnerES}.
-The ligand index $l$ and scale $s$ can be set to zero, as these are not used in the employed metric for the nearest-neighbor search.
-The parameter $\rv$ influences the distribution of the random samples around the tunnel centerline. 
-We propose to set this parameter to the average width of the tunnel.
 
 \begin{algorithm}[b]
 {\small
@@ -706,41 +702,6 @@ geometric center of the ligand was closer than 2~\AA\ from the active site).
 
 The performance of the methods is evaluated using the traversability rate, which is the percentage of frames of the protein dynamics that are traversable by the tested ligand.
 This distance is measured as the 3D distance between the geometric center of the ligand and the position of the active site.
-
-
-%\paragraph*{Influence of the Conformation Selection}
-%The number of generated ligand conformations $|\L|$ depends on the number of rotatable bonds of the ligands and even though only
-%the low-energy conformations are stored in $\L$, the set can still contain thousands of conformations.
-%For fast motion planning we utilize a subset of the original set $\L$.
-%The aim of this experiment was to verify the proposed selection of ligand conformations from a large set $\L$ (Sec.~\ref{sec::strat}).
-%
-%Two selection strategies were tested:
-%the strategy described in Sec.~\ref{sec::strat} (denoted `S') and the strategy that prefers smaller (packed) conformations (denoted `P').
-%The `P' method selects such conformations where the deviations of the atomic distance from the geometric center are the lowest, which leads 
-%to the selection of packed conformations.
-%The strategies were tested using the ligand DCP (Dichloropropanol), for which  $|\L|=1300$ conformations were created, and for the ligand
-%m040 (1,5-Dichloropentane) with $|\L|=7560$ conformations.
-%
-%The traversability rates are shown in Tab.~\ref{tab::selection}, where the subscript of each ligand's 
-%name shows the number of the selected conformations (5 or 50) and the used method (S or P).
-%In case of both tested ligands and 50 selected conformations, the `S' strategy leads to a higher traversability rate than the `P' strategy.
-%For the DCP ligand, the higher traversability rate was achieved when 50 conformations were selected.
-%This experiment shows that selecting 50 conformations using the `S' strategy (Sec.~\ref{sec::strat}) leads to better results
-%than using the smaller number of conformations or when preferring the packed conformations.
-%
-%\begin{table}[bt]
-%\centering
-%\caption{\label{tab::selection}
-%    \small
-%    The influence of the conformation selection method on the traversability rates in the first (main) tunnel of the 4E46 protein.
-%    The number after~`$/$' denotes the number of atoms.
-%}
-%\small
-%\renewcommand{\tabcolsep}{4.3pt}
-%{\scriptsize
-%\input graphSelNew.tex
-%}
-%\end{table}
 
 
 
