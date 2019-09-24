@@ -519,7 +519,7 @@ In our solution, we simulate this by shrinking the atom radii of the ligand, whi
 
 \section*{Methods}
 
-\subsection*{Preliminaries}
+%\subsection*{Preliminaries}
 
 Proteins and ligands are represented by the hard sphere model, where each atom is represented by a sphere and whose radius 
 is the van der Waals radius.
@@ -530,19 +530,24 @@ A configuration $q=(x,y,z,r_x,r_y,r_z, \alpha_1,\ldots,\alpha_m)$ of the ligand 
 position $(x,y,z)$, 3D rotation $(r_x,r_y,r_z)$ and $m$ internal degrees of freedom $\alpha_i$ modeling  the rotatable bonds.
 All configurations form the configuration space $\C$.
 The configurations, where the ligand does not collide with the protein, form the subset $\CF \subseteq \C$.
-Therefore, the task of finding the trajectory of the ligand can be solved by finding a path from the
-start configuration $\qstart \in \CF$ towards the goal $\qgoal \in \CF$.
-The distance $\dist(q_a,q_b)$ between two configuration $q_a$ and $q_b$ is measured by the 6D Euclidean metric using
-both translation and rotation part of the two configurations.
-Let $\distt(c,q)$, $c \in \R^3, q \in \C$ denote 3D Euclidean distance between the 3D point $c$ and
-the translational part of the configuration $q$.
+
 
 A protein tunnel is described by a sequence of $n$ collision-free spheres $T=( (c_i, r_i) )$, $i=1,\ldots,n$, 
 where $c_i \in$ $\mathbb{R}^3$ is the center and $r_i > 0$ is the radius of the $i$-th spehere.
 The tunnels can be computed using any existing tool, e.g., CAVER 3.0~\cite{caver3}, or CHEXVIS~\cite{masood2015chexvis}.
 
-Collision detection between the atoms of the ligand and the atoms of the protein is used
-to determine collision-free samples.
+Let $a_i(q) \in \R^3$ is the 3D position of the $i$-th atom of the ligand determined by the configuration $q \in \C$.
+The distance between two configurations $q,q' \in \C$ is measured using these atoms positions:
+
+\begin{equation}
+\dist(q_a,q_b) = \sum_{i=0}^n dist_e(a_i(q),a_i(q'))
+\end{equation}
+
+\noindent
+where $n$ is the number of atoms of the ligand, and $dist_e$ is the 3D Euclidean metric.
+By computing the distance $\dist$ using the atom positions, the flexbility of the ligand is taken into account.
+
+Collision detection between the atoms of the ligand and the atoms of the protein is used to determine collision-free samples.
 Fast collision detection can be realized using hierarchical methods such as bounding volume hiearchy~\cite{ericson2004real}.
 In the case of protein/ligand interactions, it is common to enable little penetration between the ligand's and 
 the protein's atoms~\cite{cortes2010simulating}, which can be achieved by a slight decrease
@@ -551,25 +556,20 @@ of the atom radii, e.g. to the 80~\% of the original value, which is also consid
 
 \subsection*{Computing Ligand's trajectories using Sampling-based Planning}
 
-The proposed method utilize the RRT principle~\cite{lavalleRRT} to search the configuration space.
-The RRT method builds a tree $\T$ of collision-free configurations rooted in $\qinit \in \CF$, which is expanded
-towards the random samples generated uniformly in the configuration space $\C$.
-Finding ligand trajectories in the tunnels requires to steer the growth of the tree from the start of the tunnel to its end.
-This is achieved by generating the random samples progresivelly along the tunnel.
-Let $1 \le v \le n$ denote the index of a sphere $c_v$ of the tunnel, we denote to this sphere as to the active sphere in the rest of the paper.
-The random sample $\qrand$ is generated around  $c_v$ with probability $\gb$; otherwise, it is generated uniformly in $\C$.
-To generate the random sampla around the active sphere $c_v$, the 3D position of $\qrand$ is generated from $N(c_i,\Sigma)$, where
-$\Sigma$ is the $3\times 3$ diagonal matrix with value $r_v$ on the diagonal.
-The rotational part of $\qrand$ is generated uniformly, i.e., $r_x,r_y,r_z \sim U(-\pi,\pi)$ and the internal degrees of 
-freedom $\alpha_i=0$, $i=1,\ldots,m$.
+The task of finding the trajectory of the ligand can be solved by finding a path from the
+start configuration $\qstart \in \CF$ towards the goal $\qgoal \in \CF$.
+The start and goal configurations are determined by the start and end of the protein tunnel, respectively.
 
-The main loop of the proposed method is listed in Alg.~\ref{alg::main}.
-At the begining, the tree $\T$ is initialized with the start configuration $\qinit \in \CF$ and the active sphere
-is set to the begining of the tunnel, $v=1$.
-In each iteration, a random sample $\qrand$ is generated as describe above.
-The nearest node $\qnear \in \T$ towards $\qrand$  in the tree is found and expanded.
-The task of the expansion is to find a new configuration $\qnew$ around $\qnear$ that minimizes the distance
-towards $\qrand$.
+The trajectories are found using the RRT principle~\cite{lavalleRRT} that is extended to focus the search towards the selected protein tunnel.
+The proposed method is listed in Alg.~\ref{alg::main}.
+The algorithm builds the tree $\T$ of collision-free configuration. 
+The tree is rooted at the initial configuration $\qstart \in \CF$.
+In each iteration, a random sample $\qrand \in \C$ is generated and its nearest neighbor $\qnear \in \T$ 
+in the tree $\T$ is found according to the metric $\dist$.
+The node $\qnear$ is then expanded.
+
+The task of the expansion is to find new collision-free configuration $\qnew \in \C$ around $\qnear$ that minimizes the distance
+$\dist$ towards $\qrand$.
 The vicinity of $\qnear$ is sampled by $k$ random samples $\qnew'$. 
 The translational part of $\qnew'$ is generated from $N(pos(\qnear),\Sigma')$, 
 where $pos(\qnear)$ is the translational part of $\qnear$ and $\Sigma'$ is
@@ -580,10 +580,26 @@ randomly from $U(-\pi,\pi)$.
 Each sample $\qnew'$ is checked for collision and the from the collision-free one samples, the nearest towards $\qrand$ is 
 selected, which results in a new configuration $\qnew$.
 The resulting configuration is then added to the tree and the node $\qnear$ is marked as the parent of the node $\qnew$.
-During the expansion (Alg.~\ref{alg::expand}), the vicinity of $\qnear$ is sampled with $N$ predefined
-samples.
+During the expansion (Alg.~\ref{alg::expand}), the vicinity of $\qnear$ is sampled with $N$ predefined samples.
 The samples are tested for collisions and the collision-free samples, that minimize the distance to $\qrand$ are added to the tree.
 
+The crucial part of the RRT-based search is the generation of random samples.
+In the classic RRT~\cite{lavalleRRT}, the random samples are generated uniformly from the whole configuration space $\C$.
+The uniformly generated samples $\qrand$ supports the quick expansion of the configuration tree $\T$ towards the unexplored
+regions of the configuration space.
+However, in the case trajectory planning in protein tunnels, the growth of the tree outside the tunnels is not desired.
+Instead, the growth of the tree should be contrainted only along the vicinity of the tunnel.
+
+Finding ligand trajectories in the tunnels requires to steer the growth of the tree from the start of the tunnel to its end.
+This is achieved by generating the random samples $\qrand$ progresivelly along the tunnel.
+Let $1 \le v \le n$ denote the index of a sphere $c_v$ of the tunnel, we denote to this sphere as to the active sphere in the rest of the paper.
+The random sample $\qrand$ is generated around  $c_v$ with probability $\gb$; otherwise, it is generated uniformly in $\C$.
+To generate the random sampla around the active sphere $c_v$, the 3D position of $\qrand$ is generated from $N(c_i,\Sigma)$, where
+$\Sigma$ is the $3\times 3$ diagonal matrix with value $r_v$ on the diagonal.
+The rotational part of $\qrand$ is generated uniformly, i.e., $r_x,r_y,r_z \sim U(-\pi,\pi)$ and the internal degrees of 
+freedom $\alpha_i=0$, $i=1,\ldots,m$.
+
+At the begining of the algorithm, the active sphere is set to the begining of the tunnel, $v=1$.
 After the sucessful expansion, the distance to the center of the active sphere is calculated.
 If the tree approaches the active sphere to the predefined distance $\dtg$, new active sphere of the tunnel is determined.
 The distance $\distt(c_i, q'), i=v+1,\ldots,n$ between each subsequent sphere and it's nearest node in the tree $q' \in \T$ 
@@ -596,8 +612,7 @@ The parameter $\dtg$ determines how far can the tree detour from the tunnel cent
 In case of tunnels not having other tunnels in the close vicinity (which is very common), we recommend using the double value of the tunnel average width.
 The algorithm terminates after a predefined number of planning trials $\Imax$ or if the tree reaches
 the last sphere in the tunnel, i.e., when $v = n$.
-
-and the rotational part of $\qrand$ is generated using techniques described in~\cite{kuffnerES}.
+%and the rotational part of $\qrand$ is generated using techniques described in~\cite{kuffnerES}.
 
 
 \linesnumbered
@@ -689,138 +704,44 @@ between $\qinit$ (root of the tree) and $q'$ is found, where
 \section*{Results and Discussion}
 \subsection*{Experimental Verification}
 
-The proposed algorithm was verified in two scenarios: on a sequence of frames of MD simulation and on a set of protein conformations 
-provided by the conformation sampling approach.
+The proposed algorithm was verified on a set of various proteins and ligands. 
+In each protein, tunnels for spherical probe 1.0~\AA were found using CAVER 3.0~\cite{caver3}.
+The default settings of CAVER 3.0 were used.
+The traversability was then computed for the first two tunnels (the tunnels were ranked using the CAVER 3.0).
+
+
+The tested proteins are 
+1AKD (3208 atoms),
+1BL8 (2823 atoms)
+1MXTA (8343 atoms)
+1PV7 (6581 atoms)
+1ZNJ (2382 atoms)
+2ACE (4144 atoms)
+2BG9 (14928 atoms)
+2OAR (4762 atoms)
+5JQH (7601 atoms)
+
+The ligands:
+DCP (12 atoms, 2 DOFS)
+m003,m037t,207 (4 atoms, 1 dof)
+m038t (5 atoms, 2 dofs)
+m062r,m113,m210e (5 atoms, 1 dof)
+m080,TBP (6 atoms, 2 dofs) 
+m112 (6 toms, 3 dofs)
+m133 (4 atoms, 0 dofs)
+m141 (6 atoms, 2 dofs)
+
+m037t (1,2-Dichloroethane), m038t (1,3-Dichloropropane), m056 (2-Chlorobutane), and m080 (Trichloropropane).
 
 \subsubsection*{Analysis of MD simulation}
 
 \paragraph*{Algorithm and data setup}
-The task is to compute the ligand traversability towards the active site using two main tunnels in the Haloalkane dehalogenase protein (DhaAwt, PDB ID 4E46), which consists of 4650 atoms.
-The MD simulation was computed using AMBER~12 (details about the used MD simulations of DhaAwt/4E46 are described in~\cite{marques2017catalytic}).
-The tunnels were detected in 100 consecutive frames of MD simulation in the part where the protein was already stabilized.
-The tunnels for the probe 0.9~\AA\ towards the active site defined by residues 38 (Asparagine), 102 (Histidine), and 103 (Aspartic Acid) were
-computed using the CAVER 3.0~\cite{caver3} tool.
-In most of the frames, two tunnels were detected.
-The average bottleneck sizes of these tunnels were $1.48$~\AA\ and $1.2$~\AA\ for the main and side tunnel, respectively.
-
-Models  of the ligands in Mol2 formats were converted to the param files~\cite{meiler2006rosettaligand}, containing the topology, rotatable bonds, atom types, and partial charges. 
-
-The methods \RA\ and \RB\ differ in the expansion step (lines \ref{alg::expa}--\ref{alg::expb} in Alg.~\ref{alg::expand}).
-In these lines, the \RB\ method employs the retraction step in order to find a new collision-free configuration $\qnew$ that approaches $\qrand$.
-The retraction step is realized by sampling the vicinity of the configuration $\qnear$ in the distance $0.05$~\AA\ using 20 samples.
-A collision-free sample that maximally approaches $\qrand$ is selected and added to the tree, and the retraction continues from this sample.
-The retraction step is repeated 5 times.
-The \RB\ method can therefore expand the tree by at most 5 new nodes per ligand conformation, while \RA\ extends the tree only by one new node.
-The larger number of nodes in \RB\ method is not problematic, as the KD-trees were used for the nearest-neighbor search and the time to solve these queries is significantly smaller than the collision detection.
-The parameters of the methods were selected in such a way that the number of collision detection queries in each expansion step is the same.
-For each conformation and tested scale, the \RA\ method checks $m=100$ candidate configurations for collision, and \RB\ checks $5 \times 20$ configurations for collision.
-Other parameters of the \RB\ planner were the same as for \RA.
-The planning was terminated after $\Imax$ iterations or if the tree approached the active site to the distance less than 2~\AA\ (i.e., the 
-geometric center of the ligand was closer than 2~\AA\ from the active site).
-
-The performance of the methods is evaluated using the traversability rate, which is the percentage of frames of the protein dynamics that are traversable by the tested ligand.
-This distance is measured as the 3D distance between the geometric center of the ligand and the position of the active site.
-
-
-
-\paragraph*{Traversability of Ligands}
-Based on the results of the previous experiment, 
-      %50 conformations using the `S' strategy (Sec.~\ref{sec::strat})  were selected for 
-      ligands 
-m037t (1,2-Dichloroethane), m038t (1,3-Dichloropropane), m056 (2-Chlorobutane), and m080 (Trichloropropane).
-
-\begin{table}[bt]
-\centering
-\caption{\label{tab::main}
-    \small
-    Traversability rate over 100 frames for ligands with 50 conformations in the 4E46 protein.
-    The number after '$/$' denotes the number of atoms.
-}
-\small
-\renewcommand{\tabcolsep}{2pt}
-{
-\scriptsize
-%\input graphNewNoA3.tex %without \rc (a1*) column
-}
-\end{table}
 
 The traversability rate is shown in Tab.~\ref{tab::main}. 
 Only the traversability of the main tunnel is shown, as no trajectory was found in the side tunnel for most of the tested ligands.
 The only exception is the ligand m037t, which was the smallest tested one (consisting of 8 atoms), and therefore it could fit even inside the side tunnel.
 The traversability rate is higher for the most scaled-down ligands  and it decreases with the increasing scale.
-For the DCP ligand, the trajectories were detected in 18~\% of frames for scale and the traversability of this ligand
-to the active site was approved by a separate MD simulation~\cite{marques2017catalytic}.
-Based on the success rate, also other ligands (e.g., m037t with traversability rate 45~\% at $smin$=0.8) seem to be promising.
-However, their binding was not yet approved by dedicated MD simulations.
-The planning was realized with 50 conformations of the ligands, but not all of them were used, which is shown in Tab.~\ref{tab::m040c}.
 
-Besides scaling-down the ligand, also the atoms of the protein can be scaled, which is used, e.g., in~\cite{cortes2005path}, where the scale 0.8 is used for both the ligand and protein.
-We tested also this option using \RA\ (the column \RD\ in Tab.~\ref{tab::main}).
-The results are similar to the results of \RA\ and $smin=0.6$ (except for DCP and m040, which can be a result of randomization).
-
-The proposed \RA\ planner provides higher traversability rate than the RRT-Retraction (\RB).
-The distances of the configuration trees (measured using the 3D Euclidean metric) to the active site and the runtimes in each frame
-are shown in Fig.~\ref{fig::comparison}.
-The runtimes of \RB\ are higher than the runtimes of \RA\ and the standard deviations as well.
-
-\begin{table}[t]
-\caption{\label{tab::m040c}
-\small
-Examples of elongated/packed conformation for m040 (1,5-Dichloropentane).
-The table shows the average number of different ligand conformations (out of 50) used in trajectories reaching the active site in the 4E46 protein.
-}
-\centering
-{\footnotesize
-%\def\arraystretch{0.9}
-\begin{tabular}{cc}
-\rotatebox{0}{\hskip 5pt Long} \\ 
-\includegraphics[width=0.07\textwidth]
-{fig/m040-conf1} \\
-\rotatebox{0}{Packed} \\ \includegraphics[width=0.055\textwidth]
-{fig/m040-conf2}
-\end{tabular}
-}
-{\scriptsize
-\def\arraystretch{0.9}
-%\input usedc.tex
-}
-\end{table}
-
-\subsubsection*{Analysis of Protein Conformations}
-The task of the second analysis was to find the trajectory for the ligand 4-(4-benzylphenyl)-1,3-thiazol-2-amine into the active
-site of A4 hydrolase (PDB ID 4L2L, 9666 atoms).
-The tCONCOORD tool~\cite{seeliger2007geometry} was used to generate 1000 conformations of the protein 4L2L.
-The initial PDB structure was minimized by GROMACS 4.0.7 using the input parameters recommended on the example page of tCONCOORD~\cite{tconcoord}.
-The protein conformations were generated using the default settings for tCONCOORD in the PERT mode. % which only perturbs the starting configuration of atoms instead 
-The tunnels leading to the active site defined by residues 134 (Alanine) and 311 (Phenylalanine) were computed by CAVER 3.0, using the probe 0.9~\AA.
-All 1000 conformations contained at least 5 tunnels. % more than 900 conformations contained 9 tunnels.
-The ordering of the detected tunnels slightly differs in different conformations.
-Therefore, the first three widest tunnels were used (with average bottlenecks 1.22~\AA, 1.20~\AA\, and 1.19~\AA\ with the average lengths 22.3~\AA, 25.3~\AA\, and 28.4~\AA, respectively).
-20 starting configurations were found at the begining of each tunnel, and 10 trajectories were computed for each starting configuration.
-The conformations of the ligand were prepared in the same way as in the previous section.
-From the available $|\L|=736$ low-energy conformations, 100 were selected using the `S' strategy.
-
-\begin{table}[bt]
-\centering
-\caption{\label{tab::4l2l}
-    \small
-    Traversability rate in 1000 conformations of the protein 4L2L in the first three tunnels.
-}
-\small
-\renewcommand{\tabcolsep}{2pt}
-{
-\scriptsize
-%\input traversability.tex
-}
-\end{table}
-
-As the tested ligand is a known inhibitor of the protein 4L2L~\cite{marques2017enzyme} we assumed that the ligand can reach the active site.
-Due to large size of the ligand (33 atoms), low scale-down factors $smin\in\{0.4,0.5,0.6\}$ were used and
-the active site was considered as reached if the distance to the geometric center of the ligand was less than 5~\AA.
-All parameters of the \RA\ were set as in the previous experiment, except $\Imax=100\cdot10^3$.
-The proposed planner was able to find trajectories even for this large ligand inside the long tunnels, which is
-shown by the traversability rates (Tab.~\ref{tab::4l2l}).
-Example of the solution is depicted in Fig.~\ref{fig::inhibitor}.
 
 \begin{figure}
 \centering
@@ -1001,3 +922,88 @@ The presented work has been supported by the Czech Science Foundation (GA{\v C}R
 
 \end{backmatter}
 \end{document}
+
+
+
+% text from old paper related to old experiments
+
+The MD simulation was computed using AMBER~12 (details about the used MD simulations of DhaAwt/4E46 are described in~\cite{marques2017catalytic}).
+The tunnels were detected in 100 consecutive frames of MD simulation in the part where the protein was already stabilized.
+The tunnels for the probe 0.9~\AA\ towards the active site defined by residues 38 (Asparagine), 102 (Histidine), and 103 (Aspartic Acid) were
+computed using the CAVER 3.0~\cite{caver3} tool.
+In most of the frames, two tunnels were detected.
+The average bottleneck sizes of these tunnels were $1.48$~\AA\ and $1.2$~\AA\ for the main and side tunnel, respectively.
+
+Models  of the ligands in Mol2 formats were converted to the param files~\cite{meiler2006rosettaligand}, containing the topology, rotatable bonds, atom types, and partial charges. 
+
+The methods \RA\ and \RB\ differ in the expansion step (lines \ref{alg::expa}--\ref{alg::expb} in Alg.~\ref{alg::expand}).
+In these lines, the \RB\ method employs the retraction step in order to find a new collision-free configuration $\qnew$ that approaches $\qrand$.
+The retraction step is realized by sampling the vicinity of the configuration $\qnear$ in the distance $0.05$~\AA\ using 20 samples.
+A collision-free sample that maximally approaches $\qrand$ is selected and added to the tree, and the retraction continues from this sample.
+The retraction step is repeated 5 times.
+The \RB\ method can therefore expand the tree by at most 5 new nodes per ligand conformation, while \RA\ extends the tree only by one new node.
+The larger number of nodes in \RB\ method is not problematic, as the KD-trees were used for the nearest-neighbor search and the time to solve these queries is significantly smaller than the collision detection.
+The parameters of the methods were selected in such a way that the number of collision detection queries in each expansion step is the same.
+For each conformation and tested scale, the \RA\ method checks $m=100$ candidate configurations for collision, and \RB\ checks $5 \times 20$ configurations for collision.
+Other parameters of the \RB\ planner were the same as for \RA.
+The planning was terminated after $\Imax$ iterations or if the tree approached the active site to the distance less than 2~\AA\ (i.e., the 
+geometric center of the ligand was closer than 2~\AA\ from the active site).
+
+The performance of the methods is evaluated using the traversability rate, which is the percentage of frames of the protein dynamics that are traversable by the tested ligand.
+This distance is measured as the 3D distance between the geometric center of the ligand and the position of the active site.
+
+
+
+\subsubsection*{Analysis of Protein Conformations}
+The task of the second analysis was to find the trajectory for the ligand 4-(4-benzylphenyl)-1,3-thiazol-2-amine into the active
+site of A4 hydrolase (PDB ID 4L2L, 9666 atoms).
+The tCONCOORD tool~\cite{seeliger2007geometry} was used to generate 1000 conformations of the protein 4L2L.
+The initial PDB structure was minimized by GROMACS 4.0.7 using the input parameters recommended on the example page of tCONCOORD~\cite{tconcoord}.
+The protein conformations were generated using the default settings for tCONCOORD in the PERT mode. % which only perturbs the starting configuration of atoms instead 
+The tunnels leading to the active site defined by residues 134 (Alanine) and 311 (Phenylalanine) were computed by CAVER 3.0, using the probe 0.9~\AA.
+All 1000 conformations contained at least 5 tunnels. % more than 900 conformations contained 9 tunnels.
+The ordering of the detected tunnels slightly differs in different conformations.
+Therefore, the first three widest tunnels were used (with average bottlenecks 1.22~\AA, 1.20~\AA\, and 1.19~\AA\ with the average lengths 22.3~\AA, 25.3~\AA\, and 28.4~\AA, respectively).
+20 starting configurations were found at the begining of each tunnel, and 10 trajectories were computed for each starting configuration.
+The conformations of the ligand were prepared in the same way as in the previous section.
+From the available $|\L|=736$ low-energy conformations, 100 were selected using the `S' strategy.
+
+\begin{table}[bt]
+\centering
+\caption{\label{tab::4l2l}
+    \small
+    Traversability rate in 1000 conformations of the protein 4L2L in the first three tunnels.
+}
+\small
+\renewcommand{\tabcolsep}{2pt}
+{
+\scriptsize
+%\input traversability.tex
+}
+\end{table}
+
+As the tested ligand is a known inhibitor of the protein 4L2L~\cite{marques2017enzyme} we assumed that the ligand can reach the active site.
+Due to large size of the ligand (33 atoms), low scale-down factors $smin\in\{0.4,0.5,0.6\}$ were used and
+the active site was considered as reached if the distance to the geometric center of the ligand was less than 5~\AA.
+All parameters of the \RA\ were set as in the previous experiment, except $\Imax=100\cdot10^3$.
+The proposed planner was able to find trajectories even for this large ligand inside the long tunnels, which is
+shown by the traversability rates (Tab.~\ref{tab::4l2l}).
+Example of the solution is depicted in Fig.~\ref{fig::inhibitor}.
+
+
+
+For the DCP ligand, the trajectories were detected in 18~\% of frames for scale and the traversability of this ligand
+to the active site was approved by a separate MD simulation~\cite{marques2017catalytic}.
+Based on the success rate, also other ligands (e.g., m037t with traversability rate 45~\% at $smin$=0.8) seem to be promising.
+However, their binding was not yet approved by dedicated MD simulations.
+The planning was realized with 50 conformations of the ligands, but not all of them were used, which is shown in Tab.~\ref{tab::m040c}.
+
+Besides scaling-down the ligand, also the atoms of the protein can be scaled, which is used, e.g., in~\cite{cortes2005path}, where the scale 0.8 is used for both the ligand and protein.
+We tested also this option using \RA\ (the column \RD\ in Tab.~\ref{tab::main}).
+The results are similar to the results of \RA\ and $smin=0.6$ (except for DCP and m040, which can be a result of randomization).
+
+The proposed \RA\ planner provides higher traversability rate than the RRT-Retraction (\RB).
+The distances of the configuration trees (measured using the 3D Euclidean metric) to the active site and the runtimes in each frame
+are shown in Fig.~\ref{fig::comparison}.
+The runtimes of \RB\ are higher than the runtimes of \RA\ and the standard deviations as well.
+
