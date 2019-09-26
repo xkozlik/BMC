@@ -115,9 +115,6 @@
 
 \def\Imax{I_{max}} %max number of iterations of RRT-based planners
 
-\def\dist{\mathrm{dist}}
-\def\dists{\mathrm{dist}_{\mathrm{s}}}
-
 \SetKw{return}{return}
 
 \def\sdelta{s_{\Delta}}
@@ -474,25 +471,35 @@ The Selective Retraction-based RRT~\cite{lee2012srrrt} avoids the expensive grow
 The Obstacle-based RRT~\cite{amatoOBRRT} utilizes several expansion procedures based on, e.g., random vectors, obstacle vectors, or medial axis.
 In MARRT~\cite{denny2014marrt}, newly generated samples are pushed towards the medial axis.
 
-The probability of sampling of the narrow passages can be increased by dilating the free-space, e.g., by shrinking the geometry of the robot or the obstacles~\cite{bayazitIRC}.
+In~\cite{singhLIG}, the PRM planner was applied in the ligand binding task.
+The roadmap is constructed in the configuration space and each node and edge are evaluated also using the potential energy.
+The high-energy configurations are discarded, while the low-energy configurations (and their vicinity) are sampled densely.
+This allows to find energy-efficient paths towards the desired binding sites. 
+By detecting the configurations near the protein surface that have the lowest energy and oversampling these regions, the
+tool~\cite{singhLIG} can also predict the binding sites.
 
-The shrinking technique has also been used in~\cite{cortes2010simulating}, where the exit pathways for a small flexible molecule are computed using a RRT-based method.
-The flexible ligand is modeled as a kinematic chain, which increases the dimension of the configuration space.
-To cope with these many-DOF ligands, the RRT-ML~\cite{cortes2007mlrrt} approach is employed as the basic planner in~\cite{cortes2010simulating}.
+A robotic-based approach was applied for exploring conformational landscape of cyclic peptides in~\cite{jusot2018exhaustive}.
+Similarly to our work and~\cite{cortes2010simulating}, the peptides are modeled as a kinematic chain.
+In the case of cyclic peptides, the kinematic chain is closed, which makes the sampling of conformational changes more difficult.
+Therefore, the conformations are sampled in two phases.
+First, first the conformations are sampled using only the dihedral angles and the inverse kinematics is used to enforce the loop closure.
+This results in a set of backbone conformations. 
+In the second phase, these backbone conformations are further refined considering also the side chains.
+
+The most relevant method to our research is the MoMa-LigPath tool~\cite{cortes2010simulating} that computes exit pathways
+for small flexible molecules.
+The molecules are modeled as a kinematic chain allowing to consider also the conformational changes.
+The pathways are computed using the robotic motion planning, namely using the RRT-ML planner~\cite{cortes2007mlrrt}.
 RRT-ML expands the tree primarily using those DOFs, that are essential for achieving the motion of the ligand (i.e., rotation
 and translation) and it employs other DOFs (i.e., those that are responsible for conformational changes) if they hinder the growth of the tree.
-The method~\cite{cortes2010simulating} computes any exit pathway without allowing the user to focus the search to a selected tunnel only.
-
-In~\cite{singhLIG}, the pathways for a flexible ligand are found using PRM.
-Each configuration in the roadmap is also evaluated using the electrostatic energy.
-The high-energy configurations are discarded, while the low-energy configurations (and their vicinity) are sampled densely.
-The approach~\cite{singhLIG} can also predict the ligand binding sites.
-
-
+To further increase probability of finding a solution, radii of the atoms are scaled down slightly in~\cite{cortes2010simulating}, the default
+value is 0.7 of the original radii.
+This scaling-down effectively increases the volume of the narrow passages in the configuration space, which is often used
+in the motion planning literature~\cite{bayazitIRC,vonasek2018motion,hsu06multilevel}.
+In the comparison to the methods presented in this paper, the tool~\cite{cortes2010simulating} computes any exit pathway without allowing the user to focus the search to a selected tunnel only.
 
 
 \subsection*{Contributions}
-{\color{red}Rewritten, please check. VV: I suggest to rewrite this after we describe experiments. I will take care of it }
 
 The main novelty of our proposed approach lies in the utilization of the sampling-based motion planning to compute trajectories of flexible ligands inside protein tunnels.
 The input of our approach is formed by a set of tunnels computed using Voronoi diagrams, defining our configuration space.
@@ -501,15 +508,16 @@ The trajectories can be computed both from the surface of the protein to the act
 
 %The tunnels are detected on selected protein conformations, resulting, e.g., from MD simulations or from a tool providing the protein conformation sampling~\cite{lei2004sampling,wells2005constrained,seeliger2007geometry}.
 
-In contrast to the method proposed by Cort{\'e}s et al.~\cite{cortes2010simulating}, which searches for any exit pathway from the protein, we localize the searching into detected tunnels and compute the trajectories only along each tunnel separately.
+In contrast to the method proposed by Cort{\'e}s et al.~\cite{cortes2010simulating}, which searches for any exit pathway from the protein, we localize the searching into selected tunnels and compute the trajectories only along each tunnel separately.
 This leads to significant speed-up of the calculation and allows the biochemists to further evaluate the feasibility of the detected tunnels and filter out the irrelevant ones, before performing the costly in-vitro experiments in lab.
 
 Computing the trajectories along a single tunnel brings several advantages from the motion planning point of view as well.
 The random samples are not generated in the whole configuration space, but only around the tunnel in a user-defined distance. 
 This helps to cope with the narrow passage problem.
 By selecting a tunnel to be analyzed, the users help the planner to focus only on a subset of the whole configuration
-space, similarly as in~\cite{denny2018general}.
+space. 
 Consequently, the volume of the configuration space to be searched is decreased, while the relative volume of the narrow passages is increased.
+This user-defined focus has been shown beneficial in the sampling-based planning~\cite{denny2018general}.
 
 It has been observed that tunnels detected in protein conformations without ligands (provided by MD simulations without ligands or by
 protein conformation sampling) are rather narrow. 
@@ -533,8 +541,9 @@ In our solution, we simulate this by shrinking the atom radii of the ligand, whi
 
 Proteins and ligands are represented by the hard sphere model, where each atom is represented by a sphere and whose radius 
 is the van der Waals radius.
-The flexibility of the ligand is modeled as an articulated kinematic chain with $m$ joints.
-The joints are determined by the rotatable bonds of the ligand which is described by the PDBQT~\cite{pdbqt} format.
+The protein is considered as static, i.e., only the 3D positions of the atoms (and their radii) are representing the protein.
+The ligands are considered as flexible, their are modeled as an articulated kinematic chain with $m$ degrees of freedom.
+These degrees of freedom are determined by the rotatable bonds of the ligand which is described by the PDBQT~\cite{pdbqt} format.
 
 A configuration $q=(x,y,z,r_x,r_y,r_z, \alpha_1,\ldots,\alpha_m)$ of the ligand describes its 3D 
 position $(x,y,z)$, 3D rotation $(r_x,r_y,r_z)$ and $m$ internal degrees of freedom $\alpha_i$ modeling  the rotatable bonds.
@@ -547,14 +556,15 @@ where $c_i \in$ $\mathbb{R}^3$ is the center and $r_i > 0$ is the radius of the 
 The tunnels can be computed using any existing tool, e.g., CAVER 3.0~\cite{caver3}, or CHEXVIS~\cite{masood2015chexvis}.
 
 Let $a_i(q) \in \R^3$ is the 3D position of the $i$-th atom of the ligand determined by the configuration $q \in \C$.
-These atom positions are used to determina the distance between two configururations $q,q' \in \C$ of the ligand:
+These atom positions are used to determine the distance between two  configururations $q,q' \in \C$ of the ligand:
 
 \begin{equation}
-\dist(q,q') = \sum_{i=0}^{n_l} d( a_i(q),a_i(q') )
+\label{eq::distance}
+\dist(q,q') = \sum_{i=0}^{n_l} Euclid3D( a_i(q),a_i(q') )
 \end{equation}
 
 \noindent
-where $n_l$ is the number of atoms of the ligand, and $d()$ is the 3D Euclidean metric.
+where $n_l$ is the number of atoms of the ligand, and $Euclid3D()$ is the 3D Euclidean metric.
 By computing the distance $\dist$ using the atom positions, the flexbility of the ligand is taken into account.
 
 Collision detection between the atoms of the ligand and the atoms of the protein is used to determine collision-free samples.
@@ -570,7 +580,7 @@ The task of finding the trajectory of the ligand can be solved by finding a path
 start configuration $\qstart \in \CF$ towards the goal $\qgoal \in \CF$.
 The start and goal configurations are determined by the start and end of the protein tunnel, respectively.
 
-The trajectories are found using the RRT principle~\cite{lavalleRRT} that is extended to focus the search towards the selected protein tunnel.
+The trajectories of the ligand are found using the RRT principle~\cite{lavalleRRT} that is extended to focus the search towards the selected protein tunnel.
 The proposed method is listed in Alg.~\ref{alg::main}.
 The algorithm builds the tree $\T$ of collision-free configuration. 
 The tree is rooted at the initial configuration $\qstart \in \CF$.
@@ -580,7 +590,7 @@ The node $\qnear$ is then expanded.
 The algorithm is terminated if the goal $\qgoal$ is reached to a user-define distance.
 
 The task of the expansion is to find new collision-free configuration $\qnew \in \C$ around $\qnear$ that minimizes the distance
-$\dist$ towards $\qrand$.
+Eq.~\eqref{eq::distance} towards $\qrand$.
 The vicinity of $\qnear$ is sampled by $k$ random samples $\qnew'$. 
 The translational part of $\qnew'$ is generated from $N(pos(\qnear),\Sigma')$, 
 where $pos(\qnear)$ is the translational part of $\qnear$ and $\Sigma'$ is
@@ -618,6 +628,28 @@ is calculated.
 The sphere with the lowest index $i$ whose distance towards the tree is larger than $\dtg$ is set as the active sphere.
 Setting the virtual goal to this successor allows the tree to avoid such parts of the tunnels that are not traversable or reachable by the ligand.
 The tree can slightly detour from the tunnel and overcome difficult parts (e.g., the tunnel bottleneck) by finding an alternative trajectory nearby.
+Example of the shifting of the active sphere is depicted in Fig.~\ref{fig::active}.
+
+\begin{figure}
+\centering
+{
+\renewcommand{\tabcolsep}{2pt}
+\begin{tabular}{cccc}
+\includegraphics[width=0.23\textwidth]{fig/temporary_goal_nodeA} &
+\includegraphics[width=0.23\textwidth]{fig/temporary_goal_nodeB} &
+\includegraphics[width=0.23\textwidth]{fig/temporary_goal_nodeC} &
+\includegraphics[width=0.23\textwidth]{fig/temporary_goal_nodeD} \\
+a & b & c & d \\
+\end{tabular}
+}
+\caption{\label{fig::active}
+Example of shifting the active sphere along the tunnel (grey spheres).
+The random samples are generated around the active sphere (blue) (a).
+The active sphere is moved forward if the tree approaches it (b); the active sphere can be moved even further if
+the tree skips several tunnel spheres (c).
+The results of the planning method is the configuration tree growing along the tunnel (d).
+}
+\end{figure}
 
 The parameter $\dtg$ determines how far can the tree detour from the tunnel centerline.
 In case of tunnels not having other tunnels in the close vicinity (which is very common), we recommend using the double value of the tunnel average width.
