@@ -749,61 +749,67 @@ $\qnew = \emptyset$; // empty configuration \nllabel{alg::expa} \\
 
 The proposed algorithm was verified on a set of various proteins and ligands. 
 In each protein, tunnels for spherical probe 1.0~\AA were found using CAVER 3.0~\cite{caver3}.
-The default settings of CAVER 3.0 were used.
-The traversability was then computed for the first two tunnels (the tunnels were ranked using the CAVER 3.0).
+The default settings of CAVER 3.0 were used and the tunnels were ranked according to the default CAVER 3.0 ranking system.
+The analysis was performed in the first two tunnels.
 
-
-The tested proteins are 
+The PDB IDs of the tested proteins are:
 1AKD (3208 atoms),
-1BL8 (2823 atoms)
-1MXTA (8343 atoms)
-1PV7 (6581 atoms)
-1ZNJ (2382 atoms)
-2ACE (4144 atoms)
-2BG9 (14928 atoms)
-2OAR (4762 atoms)
-5JQH (7601 atoms)
+1BL8 (2823 atoms),
+1MXTA (8343 atoms),
+1PV7 (6581 atoms),
+1ZNJ (2382 atoms),
+2ACE (4144 atoms),
+2BG9 (14928 atoms),
+2OAR (4762 atoms),
+5JQH (7601 atoms).
+
+A set of small ligands were tested:
 
 The ligands:
-DCP (12 atoms, 2 DOFS)
-m003,m037t,207 (4 atoms, 1 dof)
-m038t (5 atoms, 2 dofs)
-m062r,m113,m210e (5 atoms, 1 dof)
-m080,TBP (6 atoms, 2 dofs) 
-m112 (6 toms, 3 dofs)
-m133 (4 atoms, 0 dofs)
-m141 (6 atoms, 2 dofs)
-
-m037t (1,2-Dichloroethane), m038t (1,3-Dichloropropane), m056 (2-Chlorobutane), and m080 (Trichloropropane).
-
-
-DCP.pdb, Dichloropropanol
-m037t.pdb, 1,2-Dichloroethane
-m038t.pdb, 1,3-Dichloropropane
-m040.pdb, 1,5-Dichloropentane
-m056.pdb, 2-Chlorobutane
-m080.pdb, Trichloropropane
+Dichloropropanol (DCP) (12 atoms, 2 DOFS),
+1-chloropropane (m003) (4 atoms, 1 DOF),
+1,2-Dichloroethane (m037t) (4 atoms, 1 DOF),
+3-chloropropene (m207) (4 atoms, 1DOF),
+1,3-Dichloropropane (m038t) (5 atoms, 2 DOFs),
+(R)-bromobutane (m062r) (5 atoms, 1 DOF),
+m113 - epichlorohydrin (m113) (5 atoms, 1 DOF),
+1,3-(E)-dichloropropene (m210e) (5 atoms, 1 DOF),
+Trichloropropane (m080) (6 atoms, 2 DOFs),
+2-chloroethylvynilether (m112) (6 atoms, 3 DOFs),
+2-bromoacetonitrile (m133) (4 atoms, 0 DOFs),
+4-bromobutyronitrile (m141) (6 atoms, 2 DOFs).
 
 
+%    ---- names of ligands from Ondra ----
+%m037t (1,2-Dichloroethane), m038t (1,3-Dichloropropane), m056 (2-Chlorobutane), and m080 (Trichloropropane).
+%m003 - 1-chloropropane
+%m207 - 3-chloropropene
+%m62r - (R)-bromobutane
+%m113 - epichlorohydrin
+%m210e - 1,3-(E)-dichloropropene
+%m112 - 2-chloroethylvynilether
+%m133 - 2-bromoacetonitrile
+%m141 - 4-bromobutyronitrile
+%DCP.pdb, Dichloropropanol
+%m037t.pdb, 1,2-Dichloroethane
+%m038t.pdb, 1,3-Dichloropropane
+%m040.pdb, 1,5-Dichloropentane
+%m056.pdb, 2-Chlorobutane
+%m080.pdb, Trichloropropane
 
-\subsubsection*{Analysis of MD simulation}
+The proposed method was compared to the MoMa-LigPath (MMLP) tool~\cite{cortes2010simulating}.
+Default settings was used in the case of MMLP. The most important parameter was scale-down factor of the Van der Waals radii, which is 
+0.7. 
+We, therefore, used the same scaling factor in our method.
 
-\paragraph*{Algorithm and data setup}
-
-The traversability rate is shown in Tab.~\ref{tab::main}. 
-Only the traversability of the main tunnel is shown, as no trajectory was found in the side tunnel for most of the tested ligands.
-The only exception is the ligand m037t, which was the smallest tested one (consisting of 8 atoms), and therefore it could fit even inside the side tunnel.
-The traversability rate is higher for the most scaled-down ligands  and it decreases with the increasing scale.
+For each combination of protein, tunnel and ligand, 50 initial configurations were found at the vicinity of 3~\AA around the active site.
+These configurations were then used by both tested methods.
+The proposed planner was terminated if it reaches the last sphere of the tunnel to the distance 2~\AA or less.
+The terminate condition of the MMLP planner cannot be set by the user; instead, MMLP terminates if it finds exit pathways that leads far away from the protein.
 
 
-\begin{figure}
-\centering
-\vskip -5pt
-\includegraphics[width=0.8\textwidth]{fig/4l2l-solution.png}
-\caption{\small
-    \label{fig::inhibitor}Example of a found trajectory inside the tunnel No. 1 of the 4L2L protein with the final position of the ligand.
-}
-\end{figure}
+
+%\subsubsection*{Analysis of MD simulation}
 
 
 \subsection*{Discussion and Utilization of the Results}
@@ -1051,4 +1057,24 @@ The proposed \RA\ planner provides higher traversability rate than the RRT-Retra
 The distances of the configuration trees (measured using the 3D Euclidean metric) to the active site and the runtimes in each frame
 are shown in Fig.~\ref{fig::comparison}.
 The runtimes of \RB\ are higher than the runtimes of \RA\ and the standard deviations as well.
+
+
+\paragraph*{Algorithm and data setup}
+
+The traversability rate is shown in Tab.~\ref{tab::main}. 
+Only the traversability of the main tunnel is shown, as no trajectory was found in the side tunnel for most of the tested ligands.
+The only exception is the ligand m037t, which was the smallest tested one (consisting of 8 atoms), and therefore it could fit even inside the side tunnel.
+The traversability rate is higher for the most scaled-down ligands  and it decreases with the increasing scale.
+
+
+\begin{figure}
+\centering
+\vskip -5pt
+\includegraphics[width=0.8\textwidth]{fig/4l2l-solution.png}
+\caption{\small
+    \label{fig::inhibitor}Example of a found trajectory inside the tunnel No. 1 of the 4L2L protein with the final position of the ligand.
+}
+\end{figure}
+
+
 
