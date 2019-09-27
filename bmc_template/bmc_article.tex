@@ -664,9 +664,9 @@ After a succesfull expansion by the confiuration $\qnew$, new vector of atom pos
 
 \def\ccolor{\color{gray}}
 
-\linesnumbered
+\LinesNumbered
 \begin{algorithm}[b]
-\dontprintsemicolon
+\DontPrintSemicolon
 {\small
 \setstretch{0.88}
 \caption{\label{alg::main}Trajectory planner}
@@ -687,21 +687,21 @@ $iteration = 0$ \tcp*{\ccolor planning iteration}
 $\T$.addNode($\qinit$)\;
 \While{$iteration < \Imax$ {\bf and}  $v < n$}{
     \eIf{$rand() < \gb$}{
-        $\qrand$ = random sample around virtual goal $c_v\!\in\!T$; \nllabel{main::s1} \\
+        $\qrand$ = random sample around virtual goal $c_v\!\in\!T$ \nllabel{main::s1} \\
     }{
-        $\qrand$ = random sample from $\C$; \nllabel{main::s2} \\
+        $\qrand$ = random sample from $\C$ \nllabel{main::s2} \\
     }
     $\qnear$ = nearest node in $\T$ towards $\qrand$ \nllabel{alg::kdtree} \tcp*{\ccolor using metric $\dist$ from Eq.~\eqref{eq::distance}}
     expand($\T, \qnear,\qrand$) \tcp*{\ccolor Alg.~\ref{alg::expand}}
     \For(\tcp*{\ccolor find last reached sphere}){$i=v,v+1,\ldots,n$}{ \nllabel{alg::main:a} 
-        $q'$=$\T$.nearestNode($c_i$)\;
+        $q'$=$\T$.nearestNode($c_i$)
         \If{$\distt(c_i,q') > \dtg $}{
-            $v = i+1$; \tcp*{\ccolor new virtual goal found}
-            {\bf  break}\;
+            $v = i+1$; \tcp*{\ccolor new virtual goal found} 
+            {\bf  break}
         }
     } \nllabel{alg::main:b}
     \If(\tcp*[f]{\ccolor the tree reaches the  last tunnel's sphere}){$v=n+1$}{
-        return $\T$.reconstructPath($\qinit,\qnew$);
+        return $\T$.reconstructPath($\qinit,\qnew$)
     }
     $iteration = iteration+1$\;
 }
