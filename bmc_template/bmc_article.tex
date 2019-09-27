@@ -684,33 +684,34 @@ After a succesfull expansion by the confiuration $\qnew$, new vector of atom pos
 \hrule
 $v = 1$  \tcp*{\ccolor index of the virtual goal}
 $iteration = 0$ \tcp*{\ccolor planning iteration}
-$\T$.addNode($\qinit$)\;
+$\T$.addNode($\qinit$) \tcp*{\ccolor tree is rooted at $\qinit$}
 \While{$iteration < \Imax$ {\bf and}  $v < n$}{
-    \eIf{$rand() < \gb$}{
+    \eIf(\tcp*[f]{\ccolor generate random sample }){$rand() < \gb$}{
         $\qrand$ = random sample around virtual goal $c_v\!\in\!T$ \nllabel{main::s1} \\
     }{
         $\qrand$ = random sample from $\C$ \nllabel{main::s2} \\
     }
     $\qnear$ = nearest node in $\T$ towards $\qrand$ \nllabel{alg::kdtree} \tcp*{\ccolor using metric $\dist$ from Eq.~\eqref{eq::distance}}
     expand($\T, \qnear,\qrand$) \tcp*{\ccolor Alg.~\ref{alg::expand}}
-    \For(\tcp*{\ccolor find last reached sphere}){$i=v,v+1,\ldots,n$}{ \nllabel{alg::main:a} 
-        $q'$=$\T$.nearestNode($c_i$)
-        \If{$\distt(c_i,q') > \dtg $}{
+    \For(\tcp*[f]{\ccolor find last reached sphere}){$i=n,n-2,\ldots,v$}{ \nllabel{alg::main:a} 
+        $q'$=$\T$.nearestNode($c_i$) \tcp*{\ccolor nearest node to sphere $c_i$ using $\distt$ metric}
+        \If(\tcp*[f]{\ccolor is sphere $c_i$ reached by the tree?}){$\distt(c_i,q') < \dtg $}{
             $v = i+1$; \tcp*{\ccolor new virtual goal found} 
             {\bf  break}
         }
     } \nllabel{alg::main:b}
     \If(\tcp*[f]{\ccolor the tree reaches the  last tunnel's sphere}){$v=n+1$}{
-        return $\T$.reconstructPath($\qinit,\qnew$)
+        return $\T$.findPath($\qinit,\qnew$) \tcp*{\ccolor resulting path}
     }
     $iteration = iteration+1$\;
 }
-\return $\T$\;
+\return failure \tcp*{\ccolor no path is found from start to goal}
 }
 \end{algorithm}
 
 
 \begin{algorithm}[b]
+\DontPrintSemicolon
 {\small
 \setstretch{0.88}
 \caption{\label{alg::expand}expand}
@@ -724,22 +725,21 @@ $\T$.addNode($\qinit$)\;
 }
 \hrule
 
-$\qnew = \emptyset$; // empty configuration \nllabel{alg::expa} \\
+$\qnew = \emptyset$ \tcp*{\ccolor empty configuration \nllabel{alg::expa}}
 \For{$i = 1,\ldots,k$}{
-    $q=\qnear$\;
-    $q.position$ = random 3D position around $\qnear$\;
-    $q.rotation$ = random 3D rotation\;
+    $q=\qnear$ \\
+    $q.position$ = random 3D position around $\qnear$ \\
+    $q.rotation$ = random 3D rotation \\
     \If{isCollisionFree($q$)}{
         \If{$\qnew = \emptyset$ {\bf or} $\dist(q, \qrand) < \dist(\qnew,\qrand)$}{ \nllabel{alg::expand:a}
-            $\qnew = q$\;
+            $\qnew = q$ \tcp*{\ccolor new candidate configuration}
         }
     } 
 }
 \nllabel{alg::expb}
-\If{$\qnew \ne \emptyset$} {
-    $\T$.addNode($\qnew$)\;
-    $\T$.addEdge($\qnear,\qnew$)\;
-    {\bf break;} // go to the next conformation
+\If(\tcp*[f]{\ccolor expands the tree by $\qnew$}){$\qnew \ne \emptyset$} {
+    $\T$.addNode($\qnew$) \\
+    $\T$.addEdge($\qnear,\qnew$) \\
 }
 }
 \end{algorithm}
