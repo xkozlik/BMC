@@ -560,11 +560,11 @@ These atom positions are used to determine the distance between two  configurura
 
 \begin{equation}
 \label{eq::distance}
-\dist(q,q') = \sum_{i=0}^{n_l} Euclid3D( a_i(q),a_i(q') )
+\dist(q,q') = \sum_{i=0}^{n_l} \distt( a_i(q),a_i(q') )
 \end{equation}
 
 \noindent
-where $n_l$ is the number of atoms of the ligand, and $Euclid3D()$ is the 3D Euclidean metric.
+where $n_l$ is the number of atoms of the ligand, and $\distt$ is the 3D Euclidean metric.
 By computing the distance $\dist$ using the atom positions, the flexbility of the ligand is taken into account.
 
 Collision detection between the atoms of the ligand and the atoms of the protein is used to determine collision-free samples.
@@ -662,9 +662,11 @@ using KD-tree data structure.
 After a succesfull expansion by the confiuration $\qnew$, new vector of atom positions $a_i(\qnew)$ is added to the KD-tree.
 
 
+\def\ccolor{\color{gray}}
 
 \linesnumbered
 \begin{algorithm}[b]
+\dontprintsemicolon
 {\small
 \setstretch{0.88}
 \caption{\label{alg::main}Trajectory planner}
@@ -677,11 +679,11 @@ After a succesfull expansion by the confiuration $\qnew$, new vector of atom pos
    tunnel bias $\gb$
 }
 \KwOut{
-    configuration tree $\T$\;
+    configuration tree $\T$
 }
 \hrule
-$v = 1$; // index of the virtual goal\\
-$iteration = 0$\;
+$v = 1$  \tcp*{\ccolor index of the virtual goal}
+$iteration = 0$ \tcp*{\ccolor planning iteration}
 $\T$.addNode($\qinit$)\;
 \While{$iteration < \Imax$ {\bf and}  $v < n$}{
     \eIf{$rand() < \gb$}{
@@ -689,18 +691,17 @@ $\T$.addNode($\qinit$)\;
     }{
         $\qrand$ = random sample from $\C$; \nllabel{main::s2} \\
     }
-    $\qnear$ = nearest node in $\T$ towards $\qrand$\; \nllabel{alg::kdtree}
-    expand($\T, \qnear,\qrand$)\; 
-    \For{$i=v,v+1,\ldots,n$}{ \nllabel{alg::main:a}
+    $\qnear$ = nearest node in $\T$ towards $\qrand$ \nllabel{alg::kdtree} \tcp*{\ccolor using metric $\dist$ from Eq.~\eqref{eq::distance}}
+    expand($\T, \qnear,\qrand$) \tcp*{\ccolor Alg.~\ref{alg::expand}}
+    \For(\tcp*{\ccolor find last reached sphere}){$i=v,v+1,\ldots,n$}{ \nllabel{alg::main:a} 
         $q'$=$\T$.nearestNode($c_i$)\;
         \If{$\distt(c_i,q') > \dtg $}{
-            $v = i+1$; // new virtual goal found\;
+            $v = i+1$; \tcp*{\ccolor new virtual goal found}
             {\bf  break}\;
         }
     } \nllabel{alg::main:b}
-    \If{$v=n+1$}{
-        // last sphere of the tunnel is reached
-        return $\T$.reconstructPath($\qinit,\qnew$)\;
+    \If(\tcp*[f]{\ccolor the tree reaches the  last tunnel's sphere}){$v=n+1$}{
+        return $\T$.reconstructPath($\qinit,\qnew$);
     }
     $iteration = iteration+1$\;
 }
