@@ -751,14 +751,15 @@ $\qnew = \emptyset$ \tcp*{\ccolor empty configuration \nllabel{alg::expa}}
 
 
 \section*{Results and Discussion}
-\subsection*{Experimental Verification}
+
+\subsection*{Traversability of single protein conformations}
 
 The proposed algorithm was verified on a set of various proteins and ligands. 
-In each protein, tunnels for spherical probe 1.0~\AA were found using CAVER 3.0~\cite{caver3}.
-The default settings of CAVER 3.0 were used and the tunnels were ranked according to the default CAVER 3.0 ranking system.
-The analysis was performed in the first two tunnels.
+In each protein, tunnels for spherical probe 1.0~\AA were found using CAVER 3.0~\cite{caver3} (using default settings).
+The found tunnels were ranked using the default CAVER 3.0 system.
+The first two tunnels were then used in the experiments.
 
-The PDB IDs of the tested proteins are:
+The comparison was made using the following nine proteins:
 1AKD (3208 atoms),
 1BL8 (2823 atoms),
 1MXTA (8343 atoms),
@@ -769,9 +770,7 @@ The PDB IDs of the tested proteins are:
 2OAR (4762 atoms),
 5JQH (7601 atoms).
 
-A set of small ligands were tested:
-
-The ligands:
+The trajectories in the tunnels of these proteins were computed for a set of small ligands:
 Dichloropropanol (DCP) (12 atoms, 2 DOFS),
 1-chloropropane (m003) (4 atoms, 1 DOF),
 1,2-Dichloroethane (m037t) (4 atoms, 1 DOF),
@@ -804,18 +803,55 @@ Trichloropropane (m080) (6 atoms, 2 DOFs),
 %m080.pdb, Trichloropropane
 
 The proposed method was compared to the MoMa-LigPath (MMLP) tool~\cite{cortes2010simulating}.
-Default settings was used in the case of MMLP. The most important parameter was scale-down factor of the Van der Waals radii, which is 
-0.7. 
+Default settings was used in the case of MMLP. 
+The most important parameter was scale-down factor of the Van der Waals radii, which is 0.7. 
 We, therefore, used the same scaling factor in our method.
 
-For each combination of protein, tunnel and ligand, 50 initial configurations were found at the vicinity of 3~\AA around the active site.
-These configurations were then used by both tested methods.
-The proposed planner was terminated if it reaches the last sphere of the tunnel to the distance 2~\AA or less.
+The dataset was prepared as follows.
+In each tunnel of each ligand, 50 different initial configurations were found for each ligand at the begining of the tunnel (i.e., in the active site).
+These initial configurations were sampled randomly in the radius 3~\AA from the center of first sphere of the tunnel 
+(i.e., the distance between the geometric center of the ligand and the center of the first sphere was maximally 3~\AA).
+Rotation of the ligand was set randomly and the conformational angles as well.
+Collisions between atoms of the ligand and atoms of the protein were checked and the colliding configurations were discarded.
+This resulted in the set of 50 collision-free initial configurations.
+These initial confiurations were used by the both methods.
+
+The proposed planner was terminated if it reaches the last sphere of the tunnel to the distance 2~\AA or less (the distance between the 
+        geometric center of the ligand and the center of the last sphere of the tunnel is less than 2~\AA).
 The terminate condition of the MMLP planner cannot be set by the user; instead, MMLP terminates if it finds exit pathways that leads far away from the protein.
 
 
+TODO images for 1bl8, 2ace .. co jsme vybrali
 
-%\subsubsection*{Analysis of MD simulation}
+TODO graf casy
+
+
+\begin{figure}
+\begin{tabular}{cc}
+\includegraphics[width=0.7\textwidth]{fig/tunnel_1} &
+%\includegraphics[width=0.5\textwidth]{fig/tunnel_2} \\
+\includegraphics[width=0.2\textwidth]{fig/legend} \\
+\end{tabular}
+\caption{\label{fig::comp1}Performance (success rate) of both methods for different ligands in the first tunnels of the proteins.}
+\end{figure}
+
+
+\subsubsection*{Analysis of MD simulation}
+
+In this experiment, the task was to compute trajectories for the ligands in a set of 1000 frames of protein dynamics
+of the protein 1CQW (TODO cele jmeno?).
+{\color{red}ONDRA: please add information about the MD simulation. Was is the time resolution of the final frames?}
+
+The active site was defined by the geometric center of the residues 102 (Histidine), 103 (Aspartic acid) and 38 (Asparagine).
+In each frame, tunnels were detected using the CAVER 3.0 tool from the actual active site for the probe 0.9~\AA.
+The traversability of the ligands was computed in the first tunnel.
+
+The results are depicted in Fig.~\ref{fig::md}
+
+\begin{figure}
+\centering
+\caption{\label{fig::md}TODO image about MD}
+\end{figure}
 
 
 \subsection*{Discussion and Utilization of the Results}
