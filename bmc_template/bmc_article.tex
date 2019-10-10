@@ -754,7 +754,12 @@ $\qnew = \emptyset$ \tcp*{\ccolor empty configuration \nllabel{alg::expa}}
 
 \subsection*{Traversability of single protein conformations}
 
-The proposed algorithm was verified on a set of various proteins and ligands. 
+The performance of the proposed method was verified on a set of various proteins and ligands and compared 
+to the MoMa-LigPath (MMLP) tool~\cite{cortes2010simulating}.
+MMLP was run in the default settings including the scale factor 0.7.
+The same scale factor was used also in our method.
+Other settings of out method are: $\Imax=100 \cdots 10^3$.
+
 In each protein, tunnels for spherical probe 1.0~\AA were found using CAVER 3.0~\cite{caver3} (using default settings).
 The found tunnels were ranked using the default CAVER 3.0 system.
 The first two tunnels were then used in the experiments.
@@ -762,7 +767,7 @@ The first two tunnels were then used in the experiments.
 The comparison was made using the following nine proteins:
 1AKD (3208 atoms),
 1BL8 (2823 atoms),
-1MXTA (8343 atoms),
+1MXT (8343 atoms),
 1PV7 (6581 atoms),
 1ZNJ (2382 atoms),
 2ACE (4144 atoms),
@@ -802,11 +807,6 @@ Trichloropropane (m080) (6 atoms, 2 DOFs),
 %m056.pdb, 2-Chlorobutane
 %m080.pdb, Trichloropropane
 
-The proposed method was compared to the MoMa-LigPath (MMLP) tool~\cite{cortes2010simulating}.
-Default settings was used in the case of MMLP. 
-The most important parameter was scale-down factor of the Van der Waals radii, which is 0.7. 
-We, therefore, used the same scaling factor in our method.
-
 The dataset was prepared as follows.
 In each tunnel of each ligand, 50 different initial configurations were found for each ligand at the begining of the tunnel (i.e., in the active site).
 These initial configurations were sampled randomly in the radius 3~\AA from the center of first sphere of the tunnel 
@@ -822,7 +822,6 @@ The terminate condition of the MMLP planner cannot be set by the user; instead, 
 
 
 TODO images for 1bl8, 2ace .. co jsme vybrali
-
 TODO graf casy
 
 
