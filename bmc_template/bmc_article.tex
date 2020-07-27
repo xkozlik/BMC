@@ -432,7 +432,7 @@ for a particular ligand/protein pair, which is not practical for testing a large
 %Computationally less demanding approaches than MD for generating possible 
 %Protein conformations can be also explored using constrained geometric simulations, such as
 ROCK~\cite{lei2004sampling}, FRODA~\cite{wells2005constrained}, and tCONCOORD~\cite{seeliger2007geometry}.
-Although these approaches are faster than classica MD, they are still too slow for processin large dataset.
+Although these approaches are faster than classic MD, they are still too slow for processin large datasets.
 Therefore, computational approaches considering only geometry of the ligand and protein are still preferable due to their high speed.
 
 The widely used approaches to evaluate the ligand traversability rely on the tunnel detection.
@@ -453,51 +453,65 @@ Thus, it also does not take into account the ligand shape.
 The traversability of a tunnel by a flexible ligand of an arbitrary shape can be formulated as a motion planning problem and solved using the sampling-based motion planners.
 These planners can cope with objects (robots) with many Degrees of Freedom (DOF) and they can also consider objects of an arbitrary shape.
 Two widely used planners are the Probabilistic Roadmaps (PRM)~\cite{kavrakiForPP} and the Rapidly Exploring Random Tree (RRT)~\cite{lavalleRRT}.
-Besides many applications in robotics, the sampling-based planners have been already used in biochemistry as well, e.g., to study loop motions~\cite{cortes2004geometric}, to identify binding sites~\cite{bayazit2001ligand}, for exit pathway detection~\cite{cortes2010simulating,cortes2005path}, for tunnel detection~\cite{vonasek2017tunnel}, and especially for protein folding~\cite{raveh2009rapid,amato2002using}. %novinskaya2015improving
-
 
 The well-known issue of the sampling-based planners is the narrow passage problem.
 The narrow passage is a small region in the configuration space, whose removal changes the connectivity of the space.
 Due to its low volume, the probability of sampling the narrow passage is low.
 Consequently, many iterations are needed in order to put enough samples into the passages, which increases the computational time.
 The PRM-based planners can cope with the narrow passage problem by increasing the probability of sampling in difficult regions, e.g., by sampling along the medial axis~\cite{wilmarthMAPRM}.
-In~\cite{bergWIG}, the workspace is represented by a grid in which the difficult regions are identified using watershed labeling.
-The regions can be estimated online, e.g., based on the number of collision-free samples around a given configuration~\cite{overmarsGauss,hsuBridge} or even identified by a human operator~\cite{denny2018general}. 
+%In~\cite{bergWIG}, the workspace is represented by a grid in which the difficult regions are identified using watershed labeling.
+%The regions can be estimated online, e.g., based on the number of collision-free samples around a given configuration~\cite{overmarsGauss,hsuBridge} or even identified by a human operator~\cite{denny2018general}. 
 
 In the case of RRT-based planners, increasing the probability of sampling in difficult regions does not need to bring any advantage
 if the growth of the tree is blocked by the obstacles.
-To prevent this blocking, DD-RRT~\cite{yershovaDDRRT} limits the selection of nodes for the expansion to a small ball. 
-The radius of this ball is set to infinity for new nodes, and decreases to a predefined radius if the node cannot be successfully expanded.
-An automatic adaptation of this radius was proposed in the ADD-RRT~\cite{jailletADRRT}.
-To attract the tree towards a given region, random samples have to be generated there only if the tree can expand to this region.
+%To prevent this blocking, DD-RRT~\cite{yershovaDDRRT} limits the selection of nodes for the expansion to a small ball. 
+%The radius of this ball is set to infinity for new nodes, and decreases to a predefined radius if the node cannot be successfully expanded.
+%An automatic adaptation of this radius was proposed in the ADD-RRT~\cite{jailletADRRT}.
+To attract the tree towards a difficult region, random samples have to be generated there only if the tree can expand to this region.
 In~\cite{kardossRRTKK}, the probability of sampling is increased in several waypoints close to the narrow passages, but without specifying how to find these waypoints.
 The generalization of~\cite{kardossRRTKK} is the guided sampling, where a sequence of waypoints (a guiding path) is used to generate samples in the configuration space.
-The guiding path can be computed in the workspace~\cite{vonasek2009rrt}, or iteratively refined in the configuration space based on the solution of a relaxed version of the problem~\cite{bayazitIRC}.
+The guiding path can be computed in the workspace~\cite{vonasek2009rrt}, 
+iteratively refined in the configuration space based on the solution of a relaxed version of the problem~\cite{bayazitIRC}, or
+even specified by a human operator~\cite{denny2018general}.
 
-In the Retraction-based RRT~\cite{zhangRetraction}, the tree is retracted along the boundary of the obstacles in the configuration space.
-The Selective Retraction-based RRT~\cite{lee2012srrrt} avoids the expensive growth in the open areas of the configuration space and focuses the retractions only on the narrow passages.
-The Obstacle-based RRT~\cite{amatoOBRRT} utilizes several expansion procedures based on, e.g., random vectors, obstacle vectors, or medial axis.
-In MARRT~\cite{denny2014marrt}, newly generated samples are pushed towards the medial axis.
+The advantange of sampling-based planners is the ability to cope with high-dimensional systems.
+The flexibility of ligands (and proteins) is achieved by modelling them as a kinematic chain~\cite{cortes2010simulating}.
+This makes the sampling-based planners suitable for various biochemistry tasks, 
+%Besides many applications in robotics, the sampling-based planners have been already used in biochemistry as well, 
+e.g., to study loop motions~\cite{cortes2004geometric}, 
+to identify binding sites~\cite{bayazit2001ligand,singhLIG},
+for exit pathway detection~\cite{cortes2010simulating,cortes2005path}, 
+for tunnel detection~\cite{vonasek2017tunnel}, 
+and for protein folding~\cite{raveh2009rapid,amato2002using}. %novinskaya2015improving
+%In the Retraction-based RRT~\cite{zhangRetraction}, the tree is retracted along the boundary of the obstacles in the configuration space.
+%The Selective Retraction-based RRT~\cite{lee2012srrrt} avoids the expensive growth in the open areas of the configuration space and focuses the retractions only on the narrow passages.
+%The Obstacle-based RRT~\cite{amatoOBRRT} utilizes several expansion procedures based on, e.g., random vectors, obstacle vectors, or medial axis.
+%In MARRT~\cite{denny2014marrt}, newly generated samples are pushed towards the medial axis.
+%In~\cite{singhLIG}, the PRM planner was applied in the ligand binding task.
+%The roadmap is constructed in the configuration space and each node and edge are evaluated also using the potential energy.
+%The high-energy configurations are discarded, while the low-energy configurations (and their vicinity) are sampled densely.
+%This allows to find energy-efficient paths towards the desired binding sites. 
+%By detecting the configurations near the protein surface that have the lowest energy and oversampling these regions, the
+%tool~\cite{singhLIG} can also predict the binding sites.
 
-In~\cite{singhLIG}, the PRM planner was applied in the ligand binding task.
-The roadmap is constructed in the configuration space and each node and edge are evaluated also using the potential energy.
-The high-energy configurations are discarded, while the low-energy configurations (and their vicinity) are sampled densely.
-This allows to find energy-efficient paths towards the desired binding sites. 
-By detecting the configurations near the protein surface that have the lowest energy and oversampling these regions, the
-tool~\cite{singhLIG} can also predict the binding sites.
+%A robotic-based approach was applied for exploring conformational landscape of cyclic peptides in~\cite{jusot2018exhaustive}.
+%Similarly to our work and~\cite{cortes2010simulating}, the peptides are modeled as a kinematic chain.
+%In the case of cyclic peptides, the kinematic chain is closed, which makes the sampling of conformational changes more difficult.
+%Therefore, the conformations are sampled in two phases.
+%First, first the conformations are sampled using only the dihedral angles and the inverse kinematics is used to enforce the loop closure.
+%This results in a set of backbone conformations. 
+%In the second phase, these backbone conformations are further refined considering also the side chains.
 
-A robotic-based approach was applied for exploring conformational landscape of cyclic peptides in~\cite{jusot2018exhaustive}.
-Similarly to our work and~\cite{cortes2010simulating}, the peptides are modeled as a kinematic chain.
-In the case of cyclic peptides, the kinematic chain is closed, which makes the sampling of conformational changes more difficult.
-Therefore, the conformations are sampled in two phases.
-First, first the conformations are sampled using only the dihedral angles and the inverse kinematics is used to enforce the loop closure.
-This results in a set of backbone conformations. 
-In the second phase, these backbone conformations are further refined considering also the side chains.
-
-The most relevant method to our research is the MoMa-LigPath tool~\cite{cortes2010simulating} that computes exit pathways
-for small flexible molecules.
-The molecules are modeled as a kinematic chain allowing to consider also the conformational changes.
-The pathways are computed using the robotic motion planning, namely using the RRT-ML planner~\cite{cortes2007mlrrt}.
+The computational burden of the sampling-based planners strongly depends on the number of DOFs to be considered.
+Therefore, several methods attempt to reduce the DOFs to speed up the search.
+In ART-RRT, a combination of the RRT planner and As-Rigid-As-Possible (ARAP) morphing technique from Computer Graphics 
+is used to decrease the number of DOFs.
+Similarly, in the tool MoMa-LigPath~\cite{cortes2010simulating}, only a subset of DOFs are used for the planning by 
+using RRT-ML planner.
+%The most relevant methods to our research is the MoMa-LigPath tool~\cite{cortes2010simulating} that computes exit pathways
+%for small flexible molecules.
+%The molecules are modeled as a kinematic chain allowing to consider also the conformational changes.
+%The pathways are computed using the robotic motion planning, namely using the RRT-ML planner~\cite{cortes2007mlrrt}.
 RRT-ML expands the tree primarily using those DOFs, that are essential for achieving the motion of the ligand (i.e., rotation
 and translation) and it employs other DOFs (i.e., those that are responsible for conformational changes) if they hinder the growth of the tree.
 To further increase probability of finding a solution, radii of the atoms are scaled down slightly in~\cite{cortes2010simulating}, the default
@@ -505,6 +519,14 @@ value is 0.7 of the original radii.
 This scaling-down effectively increases the volume of the narrow passages in the configuration space, which is often used
 in the motion planning literature~\cite{bayazitIRC,vonasek2018motion,hsu06multilevel}.
 In the comparison to the methods presented in this paper, the tool~\cite{cortes2010simulating} computes any exit pathway without allowing the user to focus the search to a selected tunnel only.
+
+%ART-RRT \cite{nguyen18art}
+
+%from \cite{nguyen18art}:
+%ARAP technique is used as a morphing and dimensionreduction method for the ligand, while an energy minimization
+%is used to passively adapt the protein motions according to the ligand motions. As a result, the ART-RRT method efficiently
+%produces low-energy pathways, which can then be refined further with path-optimization methods such as the Nudged Elastic Band[46] or String[47] methods for finding minimum-energy paths (MEP). 
+%The paths produced by the ART-RRT method can also be used to start the Transition Path Sampling for computing free-energy differences[48] or reaction rate constants.[49]
 
 
 \subsection*{Contributions}
@@ -690,7 +712,7 @@ After a succesfull expansion by the confiuration $\qnew$, new vector of atom pos
 }
 \hrule
 $v = 1$  \tcp*{\ccolor index of the virtual goal}
-$iteration = 0$ \tcp*{\ccolor planning iteration}
+$iteration = 0$ \tcp*{\ccolor iteration counter}
 $\T$.addNode($\qinit$) \tcp*{\ccolor tree is rooted at $\qinit$}
 \While{$iteration < \Imax$ {\bf and}  $v < n$}{
     \eIf(\tcp*[f]{\ccolor generate random sample }){$rand() < \gb$}{
@@ -699,8 +721,8 @@ $\T$.addNode($\qinit$) \tcp*{\ccolor tree is rooted at $\qinit$}
         $\qrand$ = random sample from $\C$ \nllabel{main::s2} \\
     }
     $\qnear$ = nearest node in $\T$ towards $\qrand$ \nllabel{alg::kdtree} \tcp*{\ccolor using metric $\dist$ from Eq.~\eqref{eq::distance}}
-    expand($\T, \qnear,\qrand$) \tcp*{\ccolor Alg.~\ref{alg::expand}}
-    \For(\tcp*[f]{\ccolor find last reached sphere}){$i=n,n-2,\ldots,v$}{ \nllabel{alg::main:a} 
+    $\T=$expand($\T, \qnear,\qrand$) \tcp*{\ccolor Alg.~\ref{alg::expand}}
+    \For(\tcp*[f]{\ccolor find the last reached sphere}){$i=n,n-2,\ldots,v$}{ \nllabel{alg::main:a} 
         $q'$=$\T$.nearestNode($c_i$) \tcp*{\ccolor nearest node to sphere $c_i$ using $\distt$ metric}
         \If(\tcp*[f]{\ccolor is sphere $c_i$ reached by the tree?}){$\distt(c_i,q') < \dtg $}{
             $v = i+1$; \tcp*{\ccolor new virtual goal found} 
@@ -748,6 +770,7 @@ $\qnew = \emptyset$ \tcp*{\ccolor empty configuration \nllabel{alg::expa}}
     $\T$.addNode($\qnew$) \\
     $\T$.addEdge($\qnear,\qnew$) \\
 }
+\return $\T$ \\
 }
 \end{algorithm}
 
@@ -760,9 +783,9 @@ The performance of the proposed method was verified on a set of various proteins
 to the MoMa-LigPath (MMLP) tool~\cite{cortes2010simulating}.
 MMLP was run in the default settings including the scale factor 0.7.
 The same scale factor was used also in our method.
-Other settings of out method are: $\Imax=100 \cdots 10^3$.
+Other settings of out method are: $\Imax=100 \cdot 10^3$.
 
-In each protein, tunnels for spherical probe 1.0~\AA were found using CAVER 3.0~\cite{caver3} (using default settings).
+In each protein, tunnels for spherical probe 1.0~\AA\ were found using CAVER 3.0~\cite{caver3} (using default settings).
 The found tunnels were ranked using the default CAVER 3.0 system.
 The first two tunnels were then used in the experiments.
 
@@ -811,14 +834,14 @@ Trichloropropane (m080) (6 atoms, 2 DOFs),
 
 The dataset was prepared as follows.
 In each tunnel of each ligand, 50 different initial configurations were found for each ligand at the begining of the tunnel (i.e., in the active site).
-These initial configurations were sampled randomly in the radius 3~\AA from the center of first sphere of the tunnel 
+These initial configurations were sampled randomly in the radius 3~\AA\ from the center of first sphere of the tunnel 
 (i.e., the distance between the geometric center of the ligand and the center of the first sphere was maximally 3~\AA).
 Rotation of the ligand was set randomly and the conformational angles as well.
 Collisions between atoms of the ligand and atoms of the protein were checked and the colliding configurations were discarded.
 This resulted in the set of 50 collision-free initial configurations.
 These initial confiurations were used by the both methods.
 
-The proposed planner was terminated if it reaches the last sphere of the tunnel to the distance 2~\AA or less (the distance between the 
+The proposed planner was terminated if it reaches the last sphere of the tunnel to the distance 2~\AA\ or less (the distance between the 
         geometric center of the ligand and the center of the last sphere of the tunnel is less than 2~\AA).
 The terminate condition of the MMLP planner cannot be set by the user; instead, MMLP terminates if it finds exit pathways that leads far away from the protein.
 
