@@ -360,7 +360,7 @@ Ligands entering the active site via these tunnels can react with the amino acid
  
 %This space, forming a path called tunnel, can be utilized by a small molecule (ligand) which can enter the protein inner space and react with the amino acids surrounding the protein active site~\cite{gora2013gates,marques2017enzyme} (see Fig.~\ref{fig::motiv}).
 The location and size of the tunnel determine the size and shape of a ligand passing through this tunnel to the active site.
-Currently, the biochemists can use various computational methods for tunnel detection in order to estimate the possibility of interactions between the protein and ligand.
+Currently, the biochemists use various computational methods for tunnel detection to estimate the possibility of interactions between the protein and ligand.
 The ultimate goal of all these methods is to reduce the number of necessary in-vitro experiments.
 
 Protein properties and its reactivity are influenced not only by its constitution, but also its dynamic behavior in real environment plays a crucial role~\cite{zhou2010gates,dynasome}.
@@ -400,7 +400,7 @@ Protein  & Active site & Detected tunnels \\ %& Example of a  \\
 }
 \end{figure}
 
-To solve this problem, other computational methods have to be explored.
+%To solve this problem, other computational methods have to be explored.
 In our approach, we are aiming to overcome this by incorporating the path planning methods, which can take into account the actual shape of the ligand.
 This necessarily requires to consider also the conformational changes of the ligand, i.e., the changes in the mutual positions of the ligand atoms.
 Such ligand is denoted as a \textit{flexible ligand}.
@@ -408,7 +408,6 @@ Such ligand is denoted as a \textit{flexible ligand}.
 The analysis of the traversability of tunnels by such flexible ligands can be formulated as a motion planning problem and solved by sampling-based planners.
 The sampling-based planners randomly sample the configuration space of the robot (ligand) and connect the collision-free samples into a graph structure (roadmap).
 Rapidly Exploring Random Tree (RRT)~\cite{lavalleRRT} is one of the most used sampling-based planners. 
-Besides many applications in robotics, the sampling-based planners have been already used in biochemistry as well, e.g., to study loop motions~\cite{cortes2004geometric}, to identify binding sites~\cite{bayazit2001ligand}, for exit pathway detection~\cite{cortes2010simulating,cortes2005path}, for tunnel detection~\cite{vonasek2017tunnel}, and especially for protein folding~\cite{raveh2009rapid,amato2002using}. %novinskaya2015improving
 
 In this paper, the novelty lies in modifying the RRT planner to find trajectories for non-spherical flexible ligands inside protein tunnels.
 The tunnel is represented by a set of consecutive spheres surrounding the tunnel centerline, a common output of the Voronoi-based tunnel detection tools.
@@ -454,6 +453,9 @@ Thus, it also does not take into account the ligand shape.
 The traversability of a tunnel by a flexible ligand of an arbitrary shape can be formulated as a motion planning problem and solved using the sampling-based motion planners.
 These planners can cope with objects (robots) with many Degrees of Freedom (DOF) and they can also consider objects of an arbitrary shape.
 Two widely used planners are the Probabilistic Roadmaps (PRM)~\cite{kavrakiForPP} and the Rapidly Exploring Random Tree (RRT)~\cite{lavalleRRT}.
+Besides many applications in robotics, the sampling-based planners have been already used in biochemistry as well, e.g., to study loop motions~\cite{cortes2004geometric}, to identify binding sites~\cite{bayazit2001ligand}, for exit pathway detection~\cite{cortes2010simulating,cortes2005path}, for tunnel detection~\cite{vonasek2017tunnel}, and especially for protein folding~\cite{raveh2009rapid,amato2002using}. %novinskaya2015improving
+
+
 The well-known issue of the sampling-based planners is the narrow passage problem.
 The narrow passage is a small region in the configuration space, whose removal changes the connectivity of the space.
 Due to its low volume, the probability of sampling the narrow passage is low.
